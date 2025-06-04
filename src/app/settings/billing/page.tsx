@@ -154,12 +154,10 @@ export default function BillingPage() {
       return;
     }
     if (plan.id === currentSubscription?.tier && currentSubscription?.status === 'active' && plan.id === 'free') {
-      // This case should be disabled, but as a fallback
       toast({ title: 'Already on Free Plan', description: `You are already on the ${plan.name}.`, variant: 'default' });
       return;
     }
      if (plan.id === currentSubscription?.tier && plan.id !== 'free' && currentSubscription?.status === 'active') {
-      // This is an extension of the current paid plan
       toast({ title: 'Extend Current Plan', description: `Proceeding to extend your ${plan.name}.`, variant: 'default' });
     }
     
@@ -304,55 +302,69 @@ export default function BillingPage() {
         currentSubscription.plan_expiry_date &&
         isFuture(new Date(currentSubscription.plan_expiry_date));
 
-    let ctaElements: React.ReactNode[] = [];
+    let ctaTextParts: React.ReactNode[] = [];
     let finalButtonIsDisabled = isCurrentlySelectedProcessing;
     let finalButtonVariant: ButtonProps['variant'] = plan.isPopular && !isUserCurrentPlan ? 'default' : 'secondary';
-
 
     if (isUserCurrentPlan) {
         finalButtonVariant = 'outline';
         finalButtonIsDisabled = true; 
         if (plan.id === 'free') {
-            ctaElements.push('Current Plan');
-        } else { // Current active paid plan
-            finalButtonIsDisabled = isCurrentlySelectedProcessing; // Allow re-click if not processing *this* plan
-            ctaElements.push('Extend for ');
+            ctaTextParts.push('Current Plan');
+        } else { 
+            finalButtonIsDisabled = isCurrentlySelectedProcessing; 
+            ctaTextParts.push(<span key="action" className="font-normal">Extend for </span>);
             if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
-                ctaElements.push(<s key="s" className="text-inherit opacity-70 mr-0.5">₹{priceInfo.originalTotalPrice}</s>);
+                ctaTextParts.push(
+                    <s key="s" className="text-inherit opacity-70 mr-0.5">
+                        <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
+                    </s>
+                );
             }
-            ctaElements.push(<span key="final" className="ml-0.5">₹{priceInfo.finalTotalPrice}</span>);
+            ctaTextParts.push(
+                <span key="final" className="ml-0.5">
+                    <span className="font-normal">₹</span>{priceInfo.finalTotalPrice}
+                </span>
+            );
         }
     } else if (plan.id === 'free') {
         if (isUserOnActivePremium) {
-            ctaElements.push('Premium Active');
+            ctaTextParts.push('Premium Active');
             finalButtonIsDisabled = true;
             finalButtonVariant = 'outline';
-        } else {
-            ctaElements.push('Switch to Free');
+        } else { 
+            ctaTextParts.push('Switch to Free');
             finalButtonVariant = 'secondary';
         }
-    } else { // Not current, paid plan
+    } else { 
         finalButtonVariant = plan.isPopular ? 'default' : 'secondary';
-        if (isUserOnActivePremium && plan.tierTypeForLimits === 'premium') {
-             ctaElements.push(currentSubscription?.tier === plan.id ? 'Extend for ' : 'Switch & Extend for ');
-        } else {
-            ctaElements.push('Buy for ');
-        }
+        finalButtonIsDisabled = isCurrentlySelectedProcessing;
+
+        ctaTextParts.push(<span key="action" className="font-normal">Buy for </span>);
+
         if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
-            ctaElements.push(<s key="s" className="text-inherit opacity-70 mr-0.5">₹{priceInfo.originalTotalPrice}</s>);
+           ctaTextParts.push(
+                <s key="s" className="text-inherit opacity-70 mr-0.5">
+                    <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
+                </s>
+            );
         }
-        ctaElements.push(<span key="final" className="ml-0.5">₹{priceInfo.finalTotalPrice}</span>);
+        ctaTextParts.push(
+            <span key="final" className="ml-0.5">
+                <span className="font-normal">₹</span>{priceInfo.finalTotalPrice}
+            </span>
+        );
     }
     
-    const finalCta = <span className="font-bold">{ctaElements}</span>;
+    const finalCtaButtonContent = <span className="font-bold">{ctaTextParts}</span>;
 
     return {
       ...plan,
       priceInfo,
       isCurrent: isUserCurrentPlan,
-      disabled: finalButtonIsDisabled,
-      cta: finalCta,
-      buttonVariant: finalButtonVariant,
+      finalButtonIsDisabled: finalButtonIsDisabled,
+      ctaButtonContent: finalCtaButtonContent,
+      finalButtonVariant: finalButtonVariant,
     };
   });
 
@@ -426,7 +438,7 @@ export default function BillingPage() {
                   ) : priceInfo.isDiscounted && priceInfo.discountedPricePerMonth ? (
                     <div className="flex items-baseline flex-wrap gap-x-1.5">
                       <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">₹{priceInfo.discountedPricePerMonth}</span>
+                        <span className="text-3xl font-bold"><span className="font-normal">₹</span>{priceInfo.discountedPricePerMonth}</span>
                         <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
                       </div>
                       {priceInfo.discountPercentage && (
@@ -438,7 +450,7 @@ export default function BillingPage() {
                   ) : ( 
                     priceInfo.priceMonthlyDirect && (
                         <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">₹{priceInfo.priceMonthlyDirect}</span>
+                        <span className="text-3xl font-bold"><span className="font-normal">₹</span>{priceInfo.priceMonthlyDirect}</span>
                         <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
                         </div>
                     )
@@ -446,7 +458,7 @@ export default function BillingPage() {
                 </div>
                 <p className="text-xs text-muted-foreground min-h-[1.5em]">
                   {!priceInfo.isFree ? 
-                   `Total: ₹${priceInfo.finalTotalPrice} for ${priceInfo.durationMonths} month${priceInfo.durationMonths > 1 ? 's' : ''}`
+                   ( <>Total: <span className="font-normal">₹</span>{priceInfo.finalTotalPrice} for {priceInfo.durationMonths} month{priceInfo.durationMonths > 1 ? 's' : ''}</> )
                    : ""
                   }
                 </p>
@@ -464,11 +476,11 @@ export default function BillingPage() {
                 <Button
                   className="w-full"
                   onClick={() => handleSelectPlan(plan)}
-                  disabled={plan.disabled}
-                  variant={plan.buttonVariant}
+                  disabled={plan.finalButtonIsDisabled}
+                  variant={plan.finalButtonVariant}
                 >
                   {(isProcessingPayment && processingPlanId === plan.id) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {plan.cta}
+                  {plan.ctaButtonContent}
                 </Button>
               </CardFooter>
             </Card>
