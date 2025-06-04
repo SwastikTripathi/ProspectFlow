@@ -244,7 +244,7 @@ export default function BillingPage() {
                     razorpay_payment_id: response.razorpay_payment_id,
                   }, { onConflict: 'user_id' });
 
-                if (upsertError) throw new Error(upsertError.message || 'Failed to update subscription after payment.');
+                 if (upsertError) throw new Error(upsertError.message || 'Failed to update subscription after payment.');
                 toast({ title: 'Payment Successful!', description: `You are now subscribed to ${plan.name}.`});
                 await fetchSubscription();
               } else {
@@ -316,16 +316,16 @@ export default function BillingPage() {
         } else { 
             finalButtonIsDisabled = isCurrentlySelectedProcessing; 
             ctaTextParts.push(<span key="action" className="font-bold">Extend for</span>);
-            if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
+             if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
                 ctaTextParts.push(
-                    <s key="s" className="text-inherit opacity-70 ml-1">
-                        <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
+                     <s key="s" className="text-inherit opacity-70 ml-1.5">
+                        <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.originalTotalPrice}
                     </s>
                 );
             }
             ctaTextParts.push(
-                <span key="final" className="ml-0.5">
-                    <span className="font-normal">₹</span>{priceInfo.finalTotalPrice}
+                <span key="final" className="ml-1">
+                    <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.finalTotalPrice}
                 </span>
             );
         }
@@ -346,14 +346,14 @@ export default function BillingPage() {
 
         if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
            ctaTextParts.push(
-                <s key="s" className="text-inherit opacity-70 ml-1">
-                    <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
+                <s key="s" className="text-inherit opacity-70 ml-1.5">
+                    <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.originalTotalPrice}
                 </s>
             );
         }
         ctaTextParts.push(
-            <span key="final" className="ml-0.5">
-                <span className="font-normal">₹</span>{priceInfo.finalTotalPrice}
+            <span key="final" className="ml-1">
+                <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.finalTotalPrice}
             </span>
         );
     }
@@ -372,15 +372,16 @@ export default function BillingPage() {
 
   let currentPlanDisplayName = "N/A";
   if (currentSubscription) {
-    if (currentSubscription.tier.startsWith('premium')) {
-      currentPlanDisplayName = "Premium";
-    } else if (currentSubscription.tier === 'free') {
-      currentPlanDisplayName = ALL_AVAILABLE_PLANS.find(p => p.id === 'free')?.name || "Free Tier";
-    } else {
-      currentPlanDisplayName = ALL_AVAILABLE_PLANS.find(p => p.id === currentSubscription.tier)?.name || currentSubscription.tier;
-    }
+      const planDetails = ALL_AVAILABLE_PLANS.find(p => p.id === currentSubscription.tier);
+      if (planDetails?.tierTypeForLimits === 'premium') {
+          currentPlanDisplayName = "Premium";
+      } else if (planDetails?.id === 'free') {
+          currentPlanDisplayName = "Free Tier";
+      } else {
+          currentPlanDisplayName = planDetails?.name || currentSubscription.tier;
+      }
   } else if (!isLoading) {
-    currentPlanDisplayName = "Free Tier"; // Default if no subscription and not loading
+      currentPlanDisplayName = "Free Tier"; // Default if no subscription and not loading
   }
 
 
@@ -406,7 +407,7 @@ export default function BillingPage() {
           <p className="text-muted-foreground">Manage your subscription and billing details.</p>
         </div>
 
-        {currentSubscription || !isLoading ? ( // Show card if sub exists or loading is done (for Free tier default)
+        {currentSubscription || !isLoading ? ( 
           <Card className="shadow-lg border-primary border-2">
             <CardHeader>
               <CardTitle className="font-headline text-xl text-primary">Your Current Plan: {currentPlanDisplayName}</CardTitle>
@@ -428,7 +429,7 @@ export default function BillingPage() {
                {currentSubscription?.razorpay_order_id && (
                 <p className="text-xs text-muted-foreground">Last Order ID: {currentSubscription.razorpay_order_id}</p>
               )}
-               {!currentSubscription && !isLoading && ( // Specifically for when user has NO subscription record at all (defaults to Free)
+               {!currentSubscription && !isLoading && ( 
                  <p className="text-sm text-muted-foreground">You are currently on the Free Tier.</p>
                )}
             </CardContent>
@@ -458,7 +459,7 @@ export default function BillingPage() {
                   ) : priceInfo.isDiscounted && priceInfo.discountedPricePerMonth ? (
                     <div className="flex items-baseline flex-wrap gap-x-1.5">
                       <div className="flex items-baseline">
-                        <span className="font-normal">₹</span>{priceInfo.discountedPricePerMonth}
+                        <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.discountedPricePerMonth}
                         <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
                       </div>
                       {priceInfo.discountPercentage && (
@@ -470,7 +471,7 @@ export default function BillingPage() {
                   ) : ( 
                     priceInfo.priceMonthlyDirect && (
                         <div className="flex items-baseline">
-                        <span className="font-normal">₹</span>{priceInfo.priceMonthlyDirect}
+                        <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.priceMonthlyDirect}
                         <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
                         </div>
                     )
@@ -478,7 +479,7 @@ export default function BillingPage() {
                 </div>
                 <p className="text-xs text-muted-foreground min-h-[1.5em]">
                   {!priceInfo.isFree ? 
-                   ( <>Total: <span className="font-normal">₹</span>{priceInfo.finalTotalPrice} for {priceInfo.durationMonths} month{priceInfo.durationMonths > 1 ? 's' : ''}</> )
+                   ( <>Total: <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.finalTotalPrice} for {priceInfo.durationMonths} month{priceInfo.durationMonths > 1 ? 's' : ''}</> )
                    : ""
                   }
                 </p>
@@ -521,4 +522,3 @@ export default function BillingPage() {
     </AppLayout>
   );
 }
-
