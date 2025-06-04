@@ -55,7 +55,7 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     name: 'Free Tier',
     priceMonthly: 0,
     durationMonths: 12 * 99, // Effectively infinite for free tier
-    description: 'Get started with core features for free.',
+    description: 'Core features free.',
     features: freeFeatures,
     cta: 'Switch to Free',
     isPopular: false,
@@ -66,7 +66,7 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     name: 'Premium - Monthly',
     priceMonthly: 100, // INR
     durationMonths: 1,
-    description: 'Full-featured access, billed monthly.',
+    description: 'Full access monthly.',
     features: premiumFeatures,
     cta: 'Subscribe Monthly',
     isPopular: false,
@@ -78,7 +78,7 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     priceMonthly: 100, // Base monthly price for calculation
     durationMonths: 6,
     discountPercentage: 5, // 5% discount
-    description: 'Save 5% with a 6-month commitment.',
+    description: 'Save 5% biannually.',
     features: premiumFeatures,
     cta: 'Subscribe for 6 Months',
     isPopular: true,
@@ -90,9 +90,10 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     priceMonthly: 100, // Base monthly price for calculation
     durationMonths: 12,
     discountPercentage: 10, // 10% discount
-    description: 'Best value! Save 10% with an annual plan.',
+    description: 'Best value annually.',
     features: premiumFeatures,
     cta: 'Subscribe for 12 Months',
     isPopular: false,
   },
 ];
+

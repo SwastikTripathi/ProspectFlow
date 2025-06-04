@@ -14,6 +14,7 @@ import type { UserSubscription, AvailablePlan, SubscriptionTier, SubscriptionSta
 import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/actions/razorpayActions';
 import { addMonths, isFuture } from 'date-fns';
 import { ALL_AVAILABLE_PLANS } from '@/lib/config'; // Import from config
+import { cn } from '@/lib/utils';
 
 const NEXT_PUBLIC_RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
@@ -120,10 +121,7 @@ export default function BillingPage() {
 
       if (currentSubscription && currentSubscription.status === 'active' && currentSubscription.tier.startsWith('premium') && currentSubscription.plan_expiry_date && isFuture(new Date(currentSubscription.plan_expiry_date))) {
         // Extend existing active premium subscription
-        newStartDate = new Date(currentSubscription.plan_start_date!); // Keep original start date of current period or use current expiry as new start?
-                                                                   // For simplicity, if extending, the 'current' period's start date might not matter as much as the new expiry.
-                                                                   // Let's use current date for simplicity if needed, or rely on existing start date.
-                                                                   // Actually, better to use current date as the "transaction" date, and extend from existing expiry.
+        newStartDate = new Date(currentSubscription.plan_start_date!); 
         newExpiryDate = addMonths(new Date(currentSubscription.plan_expiry_date), plan.durationMonths);
       } else {
         // New subscription or renewal of expired/free plan
@@ -137,8 +135,8 @@ export default function BillingPage() {
           .upsert({
             user_id: currentUser.id,
             tier: plan.id,
-            plan_start_date: new Date().toISOString(), // Always set start for free plan changes to now
-            plan_expiry_date: addMonths(new Date(), plan.durationMonths).toISOString(), // Free plan also has a long "expiry"
+            plan_start_date: new Date().toISOString(), 
+            plan_expiry_date: addMonths(new Date(), plan.durationMonths).toISOString(), 
             status: 'active' as SubscriptionStatus,
           }, { onConflict: 'user_id' });
 
@@ -192,9 +190,9 @@ export default function BillingPage() {
                const { error: upsertError } = await supabase
                 .from('user_subscriptions')
                 .upsert({
-                  user_id: currentUser!.id, // currentUser is checked at start of handleSelectPlan
+                  user_id: currentUser!.id, 
                   tier: plan.id,
-                  plan_start_date: newStartDate.toISOString(), // Reflects when this transaction period ideally begins or original if extending
+                  plan_start_date: newStartDate.toISOString(), 
                   plan_expiry_date: newExpiryDate.toISOString(),
                   status: 'active' as SubscriptionStatus,
                   razorpay_order_id: response.razorpay_order_id,
@@ -259,7 +257,7 @@ export default function BillingPage() {
     return {
       ...plan,
       isCurrent: isCurrentActivePlan,
-      disabled: isProcessingPayment || (isCurrentActivePlan && plan.id === 'free'), // Disable only active free plan
+      disabled: isProcessingPayment || (isCurrentActivePlan && plan.id === 'free'), 
       cta: ctaText,
     };
   });
@@ -330,13 +328,13 @@ export default function BillingPage() {
           {displayedPlans.map((plan) => {
             const displayPrice = calculatePlanDisplayPrice(plan);
             return (
-            <Card key={plan.id} className={`flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 ${plan.isCurrent ? 'border-accent border-2' : ''} ${plan.isPopular ? 'border-primary border-2' : ''}`}>
+            <Card key={plan.id} className={cn("flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 relative", plan.isCurrent ? 'border-accent border-2' : '', plan.isPopular ? 'border-primary border-2' : '')}>
               {plan.isPopular && !plan.isCurrent && (
-                <div className="bg-primary text-primary-foreground text-xs font-semibold py-1 px-3 rounded-t-md text-center">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold py-1 px-3 rounded-full shadow-md">
                   Most Popular
                 </div>
               )}
-              <CardHeader className="pb-4">
+              <CardHeader className={cn("pb-4", plan.isPopular && !plan.isCurrent && "pt-7")}>
                 <CardTitle className="font-headline text-2xl">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
@@ -395,3 +393,4 @@ export default function BillingPage() {
     </AppLayout>
   );
 }
+
