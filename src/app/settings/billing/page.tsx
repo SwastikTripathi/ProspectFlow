@@ -306,39 +306,34 @@ export default function BillingPage() {
 
     let ctaTextParts: React.ReactNode[] = [];
     let finalButtonIsDisabled = isCurrentlySelectedProcessing;
-    let finalButtonVariant: ButtonProps['variant'] = plan.isPopular && !isUserCurrentPlan ? 'default' : 'secondary';
+    let finalButtonVariant: ButtonProps['variant'] = (plan.isPopular && !isUserCurrentPlan) ? 'default' : 'secondary';
 
     if (isUserCurrentPlan) {
         finalButtonVariant = 'outline';
         finalButtonIsDisabled = true; 
         if (plan.id === 'free') {
-            ctaTextParts.push('Current Plan');
+            ctaTextParts.push(<span key="text" className="font-bold">Current Plan</span>);
         } else { 
             finalButtonIsDisabled = isCurrentlySelectedProcessing; 
             ctaTextParts.push(<span key="action" className="font-bold">Extend for</span>);
-             if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
-                ctaTextParts.push(
-                     <s key="s" className="text-inherit opacity-70 ml-1.5">
-                        <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.originalTotalPrice}
-                    </s>
-                );
-            }
+            // For current plan, only show final price unless it was discounted (though current plans usually aren't shown with discount again)
             ctaTextParts.push(
-                <span key="final" className="ml-1">
-                    <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.finalTotalPrice}
+                <span key="final" className="ml-1.5">
+                    <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>
+                    <span className="font-bold">{priceInfo.finalTotalPrice}</span>
                 </span>
             );
         }
     } else if (plan.id === 'free') {
         if (isUserOnActivePremium) {
-            ctaTextParts.push('Premium Active');
+            ctaTextParts.push(<span key="text" className="font-bold">Premium Active</span>);
             finalButtonIsDisabled = true;
             finalButtonVariant = 'outline';
         } else { 
-            ctaTextParts.push('Switch to Free');
+            ctaTextParts.push(<span key="text" className="font-bold">Switch to Free</span>);
             finalButtonVariant = 'secondary';
         }
-    } else { 
+    } else { // Paid plans that are NOT the current plan
         finalButtonVariant = plan.isPopular ? 'default' : 'secondary';
         finalButtonIsDisabled = isCurrentlySelectedProcessing;
 
@@ -347,13 +342,15 @@ export default function BillingPage() {
         if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
            ctaTextParts.push(
                 <s key="s" className="text-inherit opacity-70 ml-1.5">
-                    <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.originalTotalPrice}
+                    <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>
+                    <span className="font-bold">{priceInfo.originalTotalPrice}</span>
                 </s>
             );
         }
         ctaTextParts.push(
             <span key="final" className="ml-1">
-                <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>{priceInfo.finalTotalPrice}
+                 <span className="font-normal" style={{ fontFamily: 'Arial' }}>₹</span>
+                 <span className="font-bold">{priceInfo.finalTotalPrice}</span>
             </span>
         );
     }
@@ -381,7 +378,7 @@ export default function BillingPage() {
           currentPlanDisplayName = planDetails?.name || currentSubscription.tier;
       }
   } else if (!isLoading) {
-      currentPlanDisplayName = "Free Tier"; // Default if no subscription and not loading
+      currentPlanDisplayName = "Free Tier"; 
   }
 
 
@@ -440,7 +437,7 @@ export default function BillingPage() {
           {displayedPlans.map((plan) => {
             const { priceInfo } = plan;
             return (
-            <Card key={plan.id} className={cn("flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 relative", plan.isCurrent ? 'border-accent border-2' : '', plan.isPopular && !plan.isCurrent ? 'border-primary border-2' : '')}>
+            <Card key={plan.id} className={cn("flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 relative", plan.isCurrent ? 'border-accent border-2' : (plan.isPopular && !plan.isCurrent ? 'border-primary border-2' : ''))}>
               {plan.isPopular && !plan.isCurrent && (
                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <div className="bg-primary text-primary-foreground text-xs font-semibold py-1 px-3 rounded-full shadow-md">
@@ -522,3 +519,4 @@ export default function BillingPage() {
     </AppLayout>
   );
 }
+
