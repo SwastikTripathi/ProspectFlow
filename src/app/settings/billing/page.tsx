@@ -18,6 +18,18 @@ import { cn } from '@/lib/utils';
 
 const NEXT_PUBLIC_RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
+interface PlanDisplayInfo {
+  isFree: boolean;
+  isDiscounted: boolean;
+  originalTotalPrice?: number;
+  discountedPricePerMonth?: number;
+  finalTotalPrice: number;
+  priceMonthlyDirect?: number;
+  durationMonths: number;
+  discountPercentage?: number;
+}
+
+
 export default function BillingPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
@@ -98,6 +110,45 @@ export default function BillingPage() {
     }
   }, [currentUser, fetchSubscription]);
 
+  const calculatePlanDisplayInfo = (plan: AvailablePlan): PlanDisplayInfo => {
+    if (plan.priceMonthly === 0 || plan.id === 'free') {
+      return {
+        isFree: true,
+        isDiscounted: false,
+        finalTotalPrice: 0,
+        durationMonths: plan.durationMonths,
+      };
+    }
+  
+    const originalTotal = plan.priceMonthly * plan.durationMonths;
+    let finalTotal = originalTotal;
+    let discountedPerMonth;
+  
+    if (plan.discountPercentage && plan.discountPercentage > 0) {
+      const discountAmount = originalTotal * (plan.discountPercentage / 100);
+      finalTotal = originalTotal - discountAmount;
+      discountedPerMonth = Math.round(finalTotal / plan.durationMonths); // Calculate per month after discount
+      return {
+        isFree: false,
+        isDiscounted: true,
+        originalTotalPrice: Math.round(originalTotal),
+        discountedPricePerMonth: discountedPerMonth,
+        finalTotalPrice: Math.round(finalTotal),
+        durationMonths: plan.durationMonths,
+        discountPercentage: plan.discountPercentage,
+      };
+    } else {
+      // Non-discounted paid plan (e.g., monthly premium)
+      return {
+        isFree: false,
+        isDiscounted: false,
+        priceMonthlyDirect: plan.priceMonthly, // This is the direct per month price
+        finalTotalPrice: Math.round(originalTotal), // Total for the duration (which is 1 month here)
+        durationMonths: plan.durationMonths,
+      };
+    }
+  };
+
   const handleSelectPlan = async (plan: AvailablePlan) => {
     if (!currentUser) {
       toast({ title: 'Not Logged In', description: 'Please log in to select a plan.', variant: 'destructive'});
@@ -109,7 +160,6 @@ export default function BillingPage() {
     }
      if (plan.id === currentSubscription?.tier && plan.id !== 'free') {
       toast({ title: 'Extend Plan?', description: `You are already on ${plan.name}. To extend, proceed with payment.`, variant: 'default' });
-      // Allow proceeding to extend for paid plans
     }
     
     setProcessingPlanId(plan.id);
@@ -120,11 +170,9 @@ export default function BillingPage() {
       let newExpiryDate;
 
       if (currentSubscription && currentSubscription.status === 'active' && currentSubscription.tier.startsWith('premium') && currentSubscription.plan_expiry_date && isFuture(new Date(currentSubscription.plan_expiry_date))) {
-        // Extend existing active premium subscription
         newStartDate = new Date(currentSubscription.plan_start_date!); 
         newExpiryDate = addMonths(new Date(currentSubscription.plan_expiry_date), plan.durationMonths);
       } else {
-        // New subscription or renewal of expired/free plan
         newExpiryDate = addMonths(newStartDate, plan.durationMonths);
       }
 
@@ -148,12 +196,12 @@ export default function BillingPage() {
             throw new Error("Razorpay Key ID is not configured. Payment cannot proceed.");
         }
         
-        const baseTotalAmount = plan.priceMonthly * plan.durationMonths;
-        const discount = plan.discountPercentage ? baseTotalAmount * (plan.discountPercentage / 100) : 0;
-        const finalAmount = baseTotalAmount - discount;
+        const priceInfo = calculatePlanDisplayInfo(plan);
+        const finalAmountForPayment = priceInfo.finalTotalPrice;
+
 
         const orderPayload = {
-          amount: Math.round(finalAmount * 100), // Amount in paisa
+          amount: Math.round(finalAmountForPayment * 100), // Amount in paisa
           currency: 'INR',
           receipt: `pf_${plan.id}_${Date.now()}`,
           notes: {
@@ -244,38 +292,26 @@ export default function BillingPage() {
   };
   
   const displayedPlans = ALL_AVAILABLE_PLANS.map(plan => {
-    const isCurrentActivePlan = currentSubscription?.tier === plan.id && currentSubscription?.status === 'active';
-    let ctaText = plan.cta;
-    if (isCurrentActivePlan) {
-        ctaText = plan.id === 'free' ? 'Current Plan' : 'Extend Plan';
-    } else if (plan.id === 'free') {
+    const priceInfo = calculatePlanDisplayInfo(plan);
+    let ctaText = "";
+    if (plan.isCurrent && plan.id === 'free') {
+        ctaText = 'Current Plan';
+    } else if (plan.isCurrent && plan.id !== 'free') {
+        ctaText = `Extend for ₹${priceInfo.finalTotalPrice}`;
+    } else if (priceInfo.isFree) {
         ctaText = 'Switch to Free';
     } else {
-        ctaText = `Get ${plan.name}`;
+        ctaText = `Buy for ₹${priceInfo.finalTotalPrice}`;
     }
     
     return {
       ...plan,
-      isCurrent: isCurrentActivePlan,
-      disabled: isProcessingPayment || (isCurrentActivePlan && plan.id === 'free'), 
+      priceInfo,
+      isCurrent: currentSubscription?.tier === plan.id && currentSubscription?.status === 'active',
+      disabled: isProcessingPayment || (currentSubscription?.tier === plan.id && currentSubscription?.status === 'active' && plan.id === 'free'), 
       cta: ctaText,
     };
   });
-
-  const calculatePlanDisplayPrice = (plan: AvailablePlan) => {
-    if (plan.priceMonthly === 0) return { main: "Free", sub: "" };
-    
-    const totalBeforeDiscount = plan.priceMonthly * plan.durationMonths;
-    const discountAmount = plan.discountPercentage ? totalBeforeDiscount * (plan.discountPercentage / 100) : 0;
-    const finalPrice = totalBeforeDiscount - discountAmount;
-
-    let mainPrice = `₹${Math.round(finalPrice)}`;
-    let subText = `for ${plan.durationMonths} month${plan.durationMonths > 1 ? 's' : ''}`;
-    if (plan.discountPercentage) {
-      subText += ` (Save ${plan.discountPercentage}%)`;
-    }
-    return { main: mainPrice, sub: subText };
-  };
 
 
   if (isLoading) {
@@ -326,36 +362,50 @@ export default function BillingPage() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {displayedPlans.map((plan) => {
-            const displayPrice = calculatePlanDisplayPrice(plan);
+            const { priceInfo } = plan;
             return (
             <Card key={plan.id} className={cn("flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 relative", plan.isCurrent ? 'border-accent border-2' : '', plan.isPopular ? 'border-primary border-2' : '')}>
               {plan.isPopular && !plan.isCurrent && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold py-1 px-3 rounded-full shadow-md">
-                  Most Popular
+                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <div className="bg-primary text-primary-foreground text-xs font-semibold py-1 px-3 rounded-full shadow-md">
+                    Most Popular
+                    </div>
                 </div>
               )}
               <CardHeader className={cn("pb-4", plan.isPopular && !plan.isCurrent && "pt-7")}>
                 <CardTitle className="font-headline text-2xl">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex-grow space-y-3">
-                <div className="text-4xl font-bold">
-                  {displayPrice.main}
+              <CardContent className="flex-grow space-y-1">
+                <div className="text-4xl font-bold mb-1 min-h-[3rem] flex items-baseline"> {/* Ensure consistent height */}
+                  {priceInfo.isFree ? (
+                    "Free"
+                  ) : priceInfo.isDiscounted ? (
+                    <div className="flex items-baseline flex-wrap gap-x-1.5"> {/* flex-wrap for responsiveness */}
+                      <s className="text-2xl font-normal text-muted-foreground">
+                        ₹{priceInfo.originalTotalPrice}
+                      </s>
+                      <div className="flex items-baseline">
+                        <span className="text-3xl font-bold">₹{priceInfo.discountedPricePerMonth}</span>
+                        <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
+                      </div>
+                      <span className="text-sm font-semibold text-green-600">
+                        ({priceInfo.discountPercentage}% off)
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline">
+                      <span className="text-3xl font-bold">₹{priceInfo.priceMonthlyDirect}</span>
+                      <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
+                    </div>
+                  )}
                 </div>
-                 <p className="text-xs text-muted-foreground">{displayPrice.sub}</p>
-                {plan.priceMonthly > 0 && plan.durationMonths > 1 && plan.discountPercentage && (
-                  <p className="text-sm font-semibold text-green-600">
-                    Originally ₹{plan.priceMonthly * plan.durationMonths}, save {plan.discountPercentage}%!
-                  </p>
-                )}
-                 {plan.priceMonthly > 0 && plan.durationMonths > 1 && !plan.discountPercentage && (
-                   <p className="text-sm text-muted-foreground">
-                    (₹{plan.priceMonthly}/month)
-                  </p>
-                 )}
+                <p className="text-xs text-muted-foreground min-h-[1.5em]">
+                  {priceInfo.isFree ? "" :
+                   `Total: ₹${priceInfo.finalTotalPrice} for ${priceInfo.durationMonths} month${priceInfo.durationMonths > 1 ? 's' : ''}`}
+                </p>
 
-
-                <ul className="space-y-2 text-sm pt-2">
+                <ul className="space-y-2 text-sm pt-3"> {/* Added pt-3 for spacing */}
                   {plan.features.map((feature, index) => (
                     <li key={index} className={`flex items-center ${feature.included ? 'text-foreground' : 'text-muted-foreground line-through'}`}>
                       {feature.included ? <CheckCircle className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" /> : <Circle className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />}
@@ -393,4 +443,3 @@ export default function BillingPage() {
     </AppLayout>
   );
 }
-
