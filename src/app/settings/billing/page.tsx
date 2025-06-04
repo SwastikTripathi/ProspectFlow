@@ -157,9 +157,6 @@ export default function BillingPage() {
       toast({ title: 'Already on Free Plan', description: `You are already on the ${plan.name}.`, variant: 'default' });
       return;
     }
-     if (plan.id === currentSubscription?.tier && plan.id !== 'free' && currentSubscription?.status === 'active') {
-      toast({ title: 'Extend Current Plan', description: `Proceeding to extend your ${plan.name}.`, variant: 'default' });
-    }
     
     setProcessingPlanId(plan.id);
     setIsProcessingPayment(true);
@@ -169,9 +166,11 @@ export default function BillingPage() {
       let newExpiryDate;
 
       if (currentSubscription && currentSubscription.status === 'active' && currentSubscription.tier.startsWith('premium') && currentSubscription.plan_expiry_date && isFuture(new Date(currentSubscription.plan_expiry_date))) {
-        newStartDate = new Date(currentSubscription.plan_start_date!); 
+        // Extend existing premium plan
+        newStartDate = new Date(currentSubscription.plan_start_date!); // Keep original start date
         newExpiryDate = addMonths(new Date(currentSubscription.plan_expiry_date), plan.durationMonths);
       } else {
+        // New plan or upgrade from free or expired
         newExpiryDate = addMonths(newStartDate, plan.durationMonths);
       }
 
@@ -187,7 +186,7 @@ export default function BillingPage() {
             status: 'active' as SubscriptionStatus,
           }, { onConflict: 'user_id' });
 
-        if (upsertError) throw upsertError;
+        if (upsertError) throw new Error(upsertError.message || 'Failed to activate free plan.');
         toast({ title: 'Plan Activated!', description: `You are now on the ${plan.name}.` });
         await fetchSubscription();
       } else {
@@ -227,33 +226,38 @@ export default function BillingPage() {
           handler: async function (response: any) {
             setProcessingPlanId(plan.id); 
             setIsProcessingPayment(true); 
-            const verificationResult = await verifyRazorpayPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
+            try { // Added try-catch block inside handler
+              const verificationResult = await verifyRazorpayPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
 
-            if (verificationResult.success) {
-               const { error: upsertError } = await supabase
-                .from('user_subscriptions')
-                .upsert({
-                  user_id: currentUser!.id, 
-                  tier: plan.id,
-                  plan_start_date: newStartDate.toISOString(), 
-                  plan_expiry_date: newExpiryDate.toISOString(),
-                  status: 'active' as SubscriptionStatus,
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                }, { onConflict: 'user_id' });
+              if (verificationResult.success) {
+                const { error: upsertError } = await supabase
+                  .from('user_subscriptions')
+                  .upsert({
+                    user_id: currentUser!.id, 
+                    tier: plan.id,
+                    plan_start_date: newStartDate.toISOString(), 
+                    plan_expiry_date: newExpiryDate.toISOString(),
+                    status: 'active' as SubscriptionStatus,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                  }, { onConflict: 'user_id' });
 
-              if (upsertError) throw upsertError;
-              toast({ title: 'Payment Successful!', description: `You are now subscribed to ${plan.name}.`});
-              await fetchSubscription();
-            } else {
-              toast({ title: 'Payment Verification Failed', description: verificationResult.error || 'Please contact support.', variant: 'destructive' });
+                if (upsertError) throw new Error(upsertError.message || 'Failed to update subscription after payment.');
+                toast({ title: 'Payment Successful!', description: `You are now subscribed to ${plan.name}.`});
+                await fetchSubscription();
+              } else {
+                toast({ title: 'Payment Verification Failed', description: verificationResult.error || 'Please contact support.', variant: 'destructive' });
+              }
+            } catch (handlerError: any) {
+               toast({ title: 'Error Updating Subscription', description: handlerError.message || 'Could not update your subscription after payment.', variant: 'destructive' });
+            } finally {
+                setIsProcessingPayment(false);
+                setProcessingPlanId(null);
             }
-            setIsProcessingPayment(false);
-            setProcessingPlanId(null);
           },
           prefill: {
             name: currentUser.user_metadata?.full_name || currentUser.email,
@@ -313,10 +317,11 @@ export default function BillingPage() {
             ctaTextParts.push('Current Plan');
         } else { 
             finalButtonIsDisabled = isCurrentlySelectedProcessing; 
-            ctaTextParts.push(<span key="action" className="font-normal">Extend for </span>);
+            ctaTextParts.push(<span key="action" className="font-bold">Extend for</span>);
+            ctaTextParts.push(<span key="space" className="mx-0.5"></span>);
             if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
                 ctaTextParts.push(
-                    <s key="s" className="text-inherit opacity-70 mr-0.5">
+                    <s key="s" className="text-inherit opacity-70">
                         <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
                     </s>
                 );
@@ -336,15 +341,16 @@ export default function BillingPage() {
             ctaTextParts.push('Switch to Free');
             finalButtonVariant = 'secondary';
         }
-    } else { 
+    } else { // Plan is not current, and not 'free' (or user is not on active premium for free plan case)
         finalButtonVariant = plan.isPopular ? 'default' : 'secondary';
         finalButtonIsDisabled = isCurrentlySelectedProcessing;
 
-        ctaTextParts.push(<span key="action" className="font-normal">Buy for </span>);
+        ctaTextParts.push(<span key="action" className="font-bold">Buy for</span>);
+        ctaTextParts.push(<span key="space" className="mx-0.5"></span>);
 
         if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
            ctaTextParts.push(
-                <s key="s" className="text-inherit opacity-70 mr-0.5">
+                <s key="s" className="text-inherit opacity-70">
                     <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
                 </s>
             );
@@ -356,7 +362,7 @@ export default function BillingPage() {
         );
     }
     
-    const finalCtaButtonContent = <span className="font-bold">{ctaTextParts}</span>;
+    const finalCtaButtonContent = <>{ctaTextParts}</>;
 
     return {
       ...plan,
