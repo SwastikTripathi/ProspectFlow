@@ -1,5 +1,5 @@
 
-import type { AvailablePlan, SubscriptionTier } from '@/lib/types';
+import type { AvailablePlan, SubscriptionTier, PlanFeature } from '@/lib/types'; // Updated import for SubscriptionTier
 
 export type PlanLimits = {
   companies: number;
@@ -7,93 +7,88 @@ export type PlanLimits = {
   jobOpenings: number;
 };
 
-const premiumLimitsConfig: PlanLimits = {
-  companies: 100,
-  contacts: 100,
-  jobOpenings: 100,
-};
-
-export const PLAN_LIMITS: Record<'free' | 'premium', PlanLimits> = {
+// PLAN_LIMITS now only uses 'free' and 'premium' as keys
+export const PLAN_LIMITS: Record<SubscriptionTier, PlanLimits> = {
   'free': {
     companies: 25,
     contacts: 25,
     jobOpenings: 30,
   },
-  'premium': premiumLimitsConfig,
+  'premium': { // Unified limits for all paid options
+    companies: 100,
+    contacts: 100,
+    jobOpenings: 100, // Example: adjust as needed for your unified premium tier
+  },
 };
 
-// Helper function to get limits based on the simplified tier type ('free' or 'premium')
-export function getLimitsForTier(tierType: 'free' | 'premium'): PlanLimits {
-  return PLAN_LIMITS[tierType] || PLAN_LIMITS.free;
+// getLimitsForTier now expects 'free' or 'premium'
+export function getLimitsForTier(tier: SubscriptionTier): PlanLimits {
+  return PLAN_LIMITS[tier] || PLAN_LIMITS.free;
 }
 
-
-const freeFeatures: AvailablePlan['features'] = [
-  { text: 'Track up to 30 job openings', included: true },
-  { text: 'Manage up to 25 contacts', included: true },
-  { text: 'Store up to 25 companies', included: true },
+// Define features once for consistency
+const freeFeatures: PlanFeature[] = [
+  { text: `Track up to ${PLAN_LIMITS.free.jobOpenings} job openings`, included: true },
+  { text: `Manage up to ${PLAN_LIMITS.free.contacts} contacts`, included: true },
+  { text: `Store up to ${PLAN_LIMITS.free.companies} companies`, included: true },
   { text: 'Basic email templates', included: true },
   { text: 'Community support', included: false },
 ];
 
-const premiumFeatures: AvailablePlan['features'] = [
-  { text: 'Track up to 100 job openings', included: true },
-  { text: 'Manage up to 100 contacts', included: true },
-  { text: 'Store up to 100 companies', included: true },
+const premiumFeatures: PlanFeature[] = [
+  { text: `Track up to ${PLAN_LIMITS.premium.jobOpenings} job openings`, included: true },
+  { text: `Manage up to ${PLAN_LIMITS.premium.contacts} contacts`, included: true },
+  { text: `Store up to ${PLAN_LIMITS.premium.companies} companies`, included: true },
   { text: 'Advanced contact management & tagging', included: true },
   { text: 'Custom follow-up cadence', included: true },
   { text: 'Unlimited saved email templates', included: true },
   { text: 'AI-powered email suggestions (Coming Soon)', included: true },
   { text: 'Priority support', included: true },
-  // { text: 'Team features (Coming Soon)', included: true }, // Keep this commented or remove if not planned soon
 ];
 
+// ALL_AVAILABLE_PLANS now represents purchase options.
+// Each paid option will map to the 'premium' databaseTier.
 export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
   {
-    id: 'free',
-    tierTypeForLimits: 'free',
-    name: 'Free Tier',
+    id: 'free', // Unique ID for this purchase option
+    databaseTier: 'free', // Tier stored in DB
+    name: 'Free Tier', // UI Display Name
     priceMonthly: 0,
-    durationMonths: 12 * 99, // Effectively infinite for free tier
+    durationMonths: 12 * 99, 
     description: 'Core features free.',
     features: freeFeatures,
-    cta: 'Switch to Free',
     isPopular: false,
   },
   {
-    id: 'premium-monthly',
-    tierTypeForLimits: 'premium',
-    name: 'Premium - Monthly',
-    priceMonthly: 100, // INR
+    id: 'premium-1m', // Unique ID for this purchase option
+    databaseTier: 'premium', // Tier stored in DB
+    name: 'Premium - 1 Month', // UI Display Name
+    priceMonthly: 100, 
     durationMonths: 1,
-    description: 'Full access monthly.',
+    description: 'Full access, monthly.',
     features: premiumFeatures,
-    cta: 'Subscribe Monthly',
     isPopular: false,
   },
   {
-    id: 'premium-half-yearly',
-    tierTypeForLimits: 'premium',
-    name: 'Premium - 6 Months',
-    priceMonthly: 100, // Base monthly price for calculation
+    id: 'premium-6m', // Unique ID for this purchase option
+    databaseTier: 'premium', // Tier stored in DB
+    name: 'Premium - 6 Months', // UI Display Name
+    priceMonthly: 100, 
     durationMonths: 6,
-    discountPercentage: 5, // 5% discount
+    discountPercentage: 5, 
     description: 'Save 5% biannually.',
     features: premiumFeatures,
-    cta: 'Subscribe for 6 Months',
     isPopular: true,
   },
   {
-    id: 'premium-yearly',
-    tierTypeForLimits: 'premium',
-    name: 'Premium - 12 Months',
-    priceMonthly: 100, // Base monthly price for calculation
+    id: 'premium-12m', // Unique ID for this purchase option
+    databaseTier: 'premium', // Tier stored in DB
+    name: 'Premium - 12 Months', // UI Display Name
+    priceMonthly: 100,
     durationMonths: 12,
-    discountPercentage: 10, // 10% discount
-    description: 'Best value annually.',
+    discountPercentage: 10,
+    description: 'Best value, annually.',
     features: premiumFeatures,
-    cta: 'Subscribe for 12 Months',
     isPopular: false,
   },
 ];
-

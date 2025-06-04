@@ -79,14 +79,15 @@ export type Tag = {
   color?: string;
 };
 
-export type SubscriptionTier = 'free' | 'premium-monthly' | 'premium-half-yearly' | 'premium-yearly';
+// Simplified to 'free' or 'premium' for database storage and core logic
+export type SubscriptionTier = 'free' | 'premium';
 export type UsagePreference = 'job_hunt' | 'sales' | 'networking' | 'other';
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending_payment' | 'trialing' | 'payment_failed';
 
 export interface UserSubscription {
   id: string;
   user_id: string;
-  tier: SubscriptionTier;
+  tier: SubscriptionTier; // Will store 'free' or 'premium'
   plan_start_date: Date | null;
   plan_expiry_date: Date | null;
   status: SubscriptionStatus;
@@ -102,19 +103,20 @@ export interface PlanFeature {
   included: boolean;
 }
 
+// Represents a purchasable option in the UI
 export interface AvailablePlan {
-  id: SubscriptionTier;
-  name: string;
-  priceMonthly: number; // Base price per month for calculation
+  id: string; // Unique ID for the purchase option, e.g., 'free', 'premium-1m', 'premium-6m'
+  databaseTier: SubscriptionTier; // The actual tier this plan maps to in the DB ('free' or 'premium')
+  name: string; // Display name for the card, e.g., "Premium - 1 Month"
+  priceMonthly: number; 
   durationMonths: number;
   discountPercentage?: number;
   description: string;
   features: PlanFeature[];
-  cta: string;
+  cta?: string; 
   isCurrent?: boolean;
   isPopular?: boolean;
   disabled?: boolean;
-  tierTypeForLimits: 'free' | 'premium'; // To map to PLAN_LIMITS keys
 }
 
 export interface FollowUpTemplateContent {
@@ -138,7 +140,6 @@ export interface UserSettings {
   updated_at?: string;
 }
     
-// For AddJobOpeningDialog and EditJobOpeningDialog's contact fields
 export interface ContactFormEntry {
   contact_id?: string;
   contactName: string;

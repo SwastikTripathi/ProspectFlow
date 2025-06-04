@@ -11,8 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Briefcase, CreditCard } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
-import { getLimitsForTier, ALL_AVAILABLE_PLANS } from '@/lib/config';
-import type { UserSubscription, SubscriptionTier, AvailablePlan } from '@/lib/types';
+import { getLimitsForTier, ALL_AVAILABLE_PLANS } from '@/lib/config'; // ALL_AVAILABLE_PLANS needed for plan names
+import type { UserSubscription, SubscriptionTier } from '@/lib/types'; // SubscriptionTier is now 'free' | 'premium'
 import { cn } from '@/lib/utils';
 import { differenceInDays, isFuture } from 'date-fns';
 
@@ -26,12 +26,11 @@ interface SidebarUsageProgressProps {
   user: User | null;
 }
 
-interface SubscriptionInfo {
-  tierId: SubscriptionTier; // e.g. 'premium-monthly'
-  tierTypeForLimits: 'free' | 'premium'; // e.g. 'premium'
+interface DisplayedSubscriptionInfo {
+  planDisplayName: string; // e.g. "Free Plan", "Premium Plan"
   status: string;
-  expiryDate: Date | null;
-  planDisplayName: string; // This will be 'Premium Plan' or 'Free Plan'
+  timeLeftMessage?: string; // e.g. "15 days left", "Expires today"
+  tierForLimits: SubscriptionTier; // 'free' or 'premium' for getLimitsForTier
 }
 
 const StatItem: React.FC<{
@@ -84,14 +83,13 @@ const StatItem: React.FC<{
       </Tooltip>
     );
   }
-
   return content;
 };
 
 
 export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
   const [stats, setStats] = useState<UsageStats | null>(null);
-  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
+  const [displayedSubInfo, setDisplayedSubInfo] = useState<DisplayedSubscriptionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { state: sidebarState } = useSidebar();
   const isCollapsed = sidebarState === 'collapsed';
@@ -100,7 +98,11 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
     if (!user) {
       setIsLoading(false);
       setStats(null);
-      setSubscriptionInfo(null);
+      setDisplayedSubInfo({
+        planDisplayName: "Free Plan",
+        status: 'active',
+        tierForLimits: 'free'
+      });
       return;
     }
 
@@ -128,20 +130,38 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         if (jobOpeningsError) throw jobOpeningsError;
         if (subscriptionError && subscriptionError.code !== 'PGRST116') throw subscriptionError;
         
-        const currentTierId = (dbSubscriptionData?.tier as SubscriptionTier) || 'free';
-        const currentPlanDetails = ALL_AVAILABLE_PLANS.find(p => p.id === currentTierId) || ALL_AVAILABLE_PLANS.find(p => p.id === 'free')!;
-        
-        const planDisplayName = currentPlanDetails.tierTypeForLimits === 'premium' ? 'Premium Plan' : currentPlanDetails.name;
+        let currentDbTier: SubscriptionTier = 'free';
+        let status = 'active';
+        let expiryDate: Date | null = null;
+        let timeLeftMessage: string | undefined = undefined;
+        let planDisplayName = "Free Plan";
 
-        setSubscriptionInfo({
-            tierId: currentTierId,
-            tierTypeForLimits: currentPlanDetails.tierTypeForLimits,
-            status: dbSubscriptionData?.status || 'active',
-            expiryDate: dbSubscriptionData?.plan_expiry_date ? new Date(dbSubscriptionData.plan_expiry_date) : null,
+        if (dbSubscriptionData) {
+          currentDbTier = dbSubscriptionData.tier as SubscriptionTier;
+          status = dbSubscriptionData.status || 'active';
+          expiryDate = dbSubscriptionData.plan_expiry_date ? new Date(dbSubscriptionData.plan_expiry_date) : null;
+
+          if (currentDbTier === 'premium' && status === 'active' && expiryDate && isFuture(expiryDate)) {
+            planDisplayName = "Premium Plan";
+            const daysLeft = differenceInDays(expiryDate, new Date());
+            if (daysLeft < 0) timeLeftMessage = "Expired";
+            else if (daysLeft === 0) timeLeftMessage = "Expires today";
+            else timeLeftMessage = `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`;
+          } else {
+            // If premium but expired or other status, or if tier is somehow not 'premium' but has expiry, revert to free logic for display
+            currentDbTier = 'free'; // Treat as free for limits and display if not active premium
+            planDisplayName = "Free Plan";
+          }
+        }
+        
+        setDisplayedSubInfo({
             planDisplayName: planDisplayName,
+            status: status,
+            timeLeftMessage: timeLeftMessage,
+            tierForLimits: currentDbTier, // This is 'free' or 'premium'
         });
         
-        const limits = getLimitsForTier(currentPlanDetails.tierTypeForLimits);
+        const limits = getLimitsForTier(currentDbTier); // Use the determined DB tier for limits
 
         setStats({
           companies: { current: companiesCount ?? 0, limit: limits.companies },
@@ -152,21 +172,17 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
       } catch (error) {
         console.error("Error fetching sidebar data:", error);
         if (isMounted) {
-          setStats(null);
-          const freePlanDetails = ALL_AVAILABLE_PLANS.find(p => p.id === 'free')!;
-          setSubscriptionInfo({
-            tierId: 'free',
-            tierTypeForLimits: 'free',
-            status: 'error',
-            expiryDate: null,
-            planDisplayName: freePlanDetails.name,
-          });
-           const limits = getLimitsForTier('free');
-            setStats({ 
+          const limits = getLimitsForTier('free');
+          setStats({ 
               companies: { current: 0, limit: limits.companies },
               contacts: { current: 0, limit: limits.contacts },
               jobOpenings: { current: 0, limit: limits.jobOpenings },
-            });
+          });
+          setDisplayedSubInfo({
+            planDisplayName: "Free Plan",
+            status: 'error',
+            tierForLimits: 'free'
+          });
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -178,10 +194,10 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
   }, [user]);
 
   const renderSubscriptionStatus = () => {
-    if (!subscriptionInfo && !isLoading) {
+    if (!displayedSubInfo && !isLoading) {
          return <div className={cn("p-2 text-xs text-sidebar-foreground/60", isCollapsed ? "text-center" : "text-left")}>Plan Status N/A</div>;
     }
-    if (isLoading || !subscriptionInfo) {
+    if (isLoading || !displayedSubInfo) {
       return (
         <div className={cn("px-2 mb-2", isCollapsed ? "py-2 flex flex-col items-center" : "py-1")}>
           <Skeleton className={cn("h-4", isCollapsed ? "w-8 mb-0.5" : "w-20 mb-0.5")} />
@@ -190,27 +206,20 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
       );
     }
 
-    const { tierTypeForLimits, expiryDate, status, planDisplayName } = subscriptionInfo;
-    const isActivePaid = tierTypeForLimits === 'premium' && status === 'active' && expiryDate && isFuture(expiryDate);
+    const { planDisplayName, timeLeftMessage, tierForLimits } = displayedSubInfo;
 
-    if (isActivePaid) {
-      const daysLeft = differenceInDays(expiryDate!, new Date()); 
-      let timeLeftMessage = "";
-      if (daysLeft < 0) timeLeftMessage = "Expired";
-      else if (daysLeft === 0) timeLeftMessage = "Expires today";
-      else timeLeftMessage = `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`;
-
+    if (tierForLimits === 'premium') {
       const premiumContent = (
         <div className={cn("w-full", isCollapsed ? "py-1 text-center" : "py-2")}>
           {isCollapsed ? (
             <>
-              <p className="text-xs font-semibold truncate" title={planDisplayName}>{planDisplayName.split(' - ')[0]}</p>
-              <p className="text-[0.65rem] leading-tight text-sidebar-foreground/80">{timeLeftMessage}</p>
+              <p className="text-xs font-semibold truncate" title={planDisplayName}>{planDisplayName}</p>
+              {timeLeftMessage && <p className="text-[0.65rem] leading-tight text-sidebar-foreground/80">{timeLeftMessage}</p>}
             </>
           ) : (
             <div className="flex justify-between items-center w-full">
               <p className="text-sm font-semibold text-sidebar-foreground truncate" title={planDisplayName}>{planDisplayName}</p>
-              <p className="text-xs text-sidebar-foreground/80">{timeLeftMessage}</p>
+              {timeLeftMessage && <p className="text-xs text-sidebar-foreground/80">{timeLeftMessage}</p>}
             </div>
           )}
         </div>
@@ -223,13 +232,13 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
             </TooltipTrigger>
             <TooltipContent side="right" align="center" className="text-xs">
               <p>{planDisplayName}</p>
-              <p>{timeLeftMessage}</p>
+              {timeLeftMessage && <p>{timeLeftMessage}</p>}
             </TooltipContent>
           </Tooltip>
         );
       }
       return <div className="px-2 mb-2 text-sidebar-foreground">{premiumContent}</div>;
-    } else { 
+    } else { // Free Plan
       const freePlanContent = (
          <div className={cn("w-full", isCollapsed ? "flex flex-col items-center py-1" : "py-2")}>
           {isCollapsed ? (
@@ -289,9 +298,12 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
           <StatItem icon={Building2} label="Companies" current={stats.companies.current} limit={stats.companies.limit} />
         </div>
       )}
-       {!isLoading && !stats && !subscriptionInfo?.status?.includes('error') && (
+       {!isLoading && !stats && displayedSubInfo?.status !== 'error' && (
         <div className={cn("p-2 text-xs text-sidebar-foreground/60", isCollapsed ? "text-center" : "text-left")}>Usage Stats N/A</div>
       )}
+       {displayedSubInfo?.status === 'error' && !isLoading && (
+         <div className={cn("p-2 text-xs text-destructive", isCollapsed ? "text-center" : "text-left")}>Error loading stats.</div>
+       )}
     </>
   );
 }
