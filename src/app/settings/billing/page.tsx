@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Script from 'next/script';
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Circle, Loader2, CreditCard, HelpCircle, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
@@ -154,11 +154,13 @@ export default function BillingPage() {
       return;
     }
     if (plan.id === currentSubscription?.tier && currentSubscription?.status === 'active' && plan.id === 'free') {
+      // This case should be disabled, but as a fallback
       toast({ title: 'Already on Free Plan', description: `You are already on the ${plan.name}.`, variant: 'default' });
       return;
     }
-     if (plan.id === currentSubscription?.tier && plan.id !== 'free') {
-      toast({ title: 'Extend Plan?', description: `You are already on ${plan.name}. To extend, proceed with payment.`, variant: 'default' });
+     if (plan.id === currentSubscription?.tier && plan.id !== 'free' && currentSubscription?.status === 'active') {
+      // This is an extension of the current paid plan
+      toast({ title: 'Extend Current Plan', description: `Proceeding to extend your ${plan.name}.`, variant: 'default' });
     }
     
     setProcessingPlanId(plan.id);
@@ -169,11 +171,9 @@ export default function BillingPage() {
       let newExpiryDate;
 
       if (currentSubscription && currentSubscription.status === 'active' && currentSubscription.tier.startsWith('premium') && currentSubscription.plan_expiry_date && isFuture(new Date(currentSubscription.plan_expiry_date))) {
-        // If extending, start date is the old start date to maintain record continuity, but actual validity extends from old expiry.
         newStartDate = new Date(currentSubscription.plan_start_date!); 
         newExpiryDate = addMonths(new Date(currentSubscription.plan_expiry_date), plan.durationMonths);
       } else {
-        // New subscription or expired one
         newExpiryDate = addMonths(newStartDate, plan.durationMonths);
       }
 
@@ -184,8 +184,8 @@ export default function BillingPage() {
           .upsert({
             user_id: currentUser.id,
             tier: plan.id,
-            plan_start_date: new Date().toISOString(), // Free plan always starts now
-            plan_expiry_date: addMonths(new Date(), plan.durationMonths).toISOString(), // Free plan duration
+            plan_start_date: new Date().toISOString(), 
+            plan_expiry_date: addMonths(new Date(), plan.durationMonths).toISOString(), 
             status: 'active' as SubscriptionStatus,
           }, { onConflict: 'user_id' });
 
@@ -292,48 +292,67 @@ export default function BillingPage() {
     setProcessingPlanId(null);
   };
   
-  const displayedPlans = ALL_AVAILABLE_PLANS.map(plan => {
+  const displayedPlans = ALL_AVAILABLE_PLANS.map((plan) => {
     const priceInfo = calculatePlanDisplayInfo(plan);
-    let ctaContent: React.ReactNode;
+    const isCurrentlySelectedProcessing = processingPlanId === plan.id && isProcessingPayment;
 
-    if (currentSubscription?.tier === plan.id && currentSubscription?.status === 'active') {
-      if (plan.id === 'free') {
-        ctaContent = 'Current Plan';
-      } else { // Current active paid plan
-        ctaContent = (
-          <>
-            Extend for&nbsp;
-            {priceInfo.isDiscounted && priceInfo.originalTotalPrice && (
-              <s className="text-sm font-normal text-primary-foreground/80 mr-1">
-                ₹{priceInfo.originalTotalPrice}
-              </s>
-            )}
-            ₹{priceInfo.finalTotalPrice}
-          </>
-        );
-      }
-    } else if (priceInfo.isFree) {
-      ctaContent = 'Switch to Free';
+    const isUserCurrentPlan = currentSubscription?.tier === plan.id && currentSubscription?.status === 'active';
+    const isUserOnActivePremium = 
+        currentSubscription &&
+        currentSubscription.tier !== 'free' &&
+        currentSubscription.status === 'active' &&
+        currentSubscription.plan_expiry_date &&
+        isFuture(new Date(currentSubscription.plan_expiry_date));
+
+    let ctaElements: React.ReactNode[] = [];
+    let finalButtonIsDisabled = isCurrentlySelectedProcessing;
+    let finalButtonVariant: ButtonProps['variant'] = plan.isPopular && !isUserCurrentPlan ? 'default' : 'secondary';
+
+
+    if (isUserCurrentPlan) {
+        finalButtonVariant = 'outline';
+        finalButtonIsDisabled = true; 
+        if (plan.id === 'free') {
+            ctaElements.push('Current Plan');
+        } else { // Current active paid plan
+            finalButtonIsDisabled = isCurrentlySelectedProcessing; // Allow re-click if not processing *this* plan
+            ctaElements.push('Extend for ');
+            if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
+                ctaElements.push(<s key="s" className="text-inherit opacity-70 mr-0.5">₹{priceInfo.originalTotalPrice}</s>);
+            }
+            ctaElements.push(<span key="final" className="ml-0.5">₹{priceInfo.finalTotalPrice}</span>);
+        }
+    } else if (plan.id === 'free') {
+        if (isUserOnActivePremium) {
+            ctaElements.push('Premium Active');
+            finalButtonIsDisabled = true;
+            finalButtonVariant = 'outline';
+        } else {
+            ctaElements.push('Switch to Free');
+            finalButtonVariant = 'secondary';
+        }
     } else { // Not current, paid plan
-      ctaContent = (
-        <>
-          Buy for&nbsp;
-          {priceInfo.isDiscounted && priceInfo.originalTotalPrice && (
-            <s className="text-sm font-normal text-primary-foreground/80 mr-1">
-              ₹{priceInfo.originalTotalPrice}
-            </s>
-          )}
-          ₹{priceInfo.finalTotalPrice}
-        </>
-      );
+        finalButtonVariant = plan.isPopular ? 'default' : 'secondary';
+        if (isUserOnActivePremium && plan.tierTypeForLimits === 'premium') {
+             ctaElements.push(currentSubscription?.tier === plan.id ? 'Extend for ' : 'Switch & Extend for ');
+        } else {
+            ctaElements.push('Buy for ');
+        }
+        if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
+            ctaElements.push(<s key="s" className="text-inherit opacity-70 mr-0.5">₹{priceInfo.originalTotalPrice}</s>);
+        }
+        ctaElements.push(<span key="final" className="ml-0.5">₹{priceInfo.finalTotalPrice}</span>);
     }
     
+    const finalCta = <span className="font-bold">{ctaElements}</span>;
+
     return {
       ...plan,
       priceInfo,
-      isCurrent: currentSubscription?.tier === plan.id && currentSubscription?.status === 'active',
-      disabled: isProcessingPayment || (currentSubscription?.tier === plan.id && currentSubscription?.status === 'active' && plan.id === 'free'),
-      cta: ctaContent,
+      isCurrent: isUserCurrentPlan,
+      disabled: finalButtonIsDisabled,
+      cta: finalCta,
+      buttonVariant: finalButtonVariant,
     };
   });
 
@@ -445,10 +464,10 @@ export default function BillingPage() {
                 <Button
                   className="w-full"
                   onClick={() => handleSelectPlan(plan)}
-                  disabled={plan.disabled || (isProcessingPayment && processingPlanId === plan.id)}
-                  variant={plan.isCurrent && plan.id !== 'free' ? 'default' : (plan.isCurrent ? 'outline' : (plan.isPopular ? 'default' : 'secondary'))}
+                  disabled={plan.disabled}
+                  variant={plan.buttonVariant}
                 >
-                  {isProcessingPayment && processingPlanId === plan.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {(isProcessingPayment && processingPlanId === plan.id) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {plan.cta}
                 </Button>
               </CardFooter>
