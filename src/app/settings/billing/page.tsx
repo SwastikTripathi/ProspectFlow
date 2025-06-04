@@ -166,11 +166,9 @@ export default function BillingPage() {
       let newExpiryDate;
 
       if (currentSubscription && currentSubscription.status === 'active' && currentSubscription.tier.startsWith('premium') && currentSubscription.plan_expiry_date && isFuture(new Date(currentSubscription.plan_expiry_date))) {
-        // Extend existing premium plan
-        newStartDate = new Date(currentSubscription.plan_start_date!); // Keep original start date
+        newStartDate = new Date(currentSubscription.plan_start_date!); 
         newExpiryDate = addMonths(new Date(currentSubscription.plan_expiry_date), plan.durationMonths);
       } else {
-        // New plan or upgrade from free or expired
         newExpiryDate = addMonths(newStartDate, plan.durationMonths);
       }
 
@@ -226,7 +224,7 @@ export default function BillingPage() {
           handler: async function (response: any) {
             setProcessingPlanId(plan.id); 
             setIsProcessingPayment(true); 
-            try { // Added try-catch block inside handler
+            try { 
               const verificationResult = await verifyRazorpayPayment({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -318,10 +316,9 @@ export default function BillingPage() {
         } else { 
             finalButtonIsDisabled = isCurrentlySelectedProcessing; 
             ctaTextParts.push(<span key="action" className="font-bold">Extend for</span>);
-            ctaTextParts.push(<span key="space" className="mx-0.5"></span>);
             if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
                 ctaTextParts.push(
-                    <s key="s" className="text-inherit opacity-70">
+                    <s key="s" className="text-inherit opacity-70 ml-1">
                         <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
                     </s>
                 );
@@ -341,16 +338,15 @@ export default function BillingPage() {
             ctaTextParts.push('Switch to Free');
             finalButtonVariant = 'secondary';
         }
-    } else { // Plan is not current, and not 'free' (or user is not on active premium for free plan case)
+    } else { 
         finalButtonVariant = plan.isPopular ? 'default' : 'secondary';
         finalButtonIsDisabled = isCurrentlySelectedProcessing;
 
         ctaTextParts.push(<span key="action" className="font-bold">Buy for</span>);
-        ctaTextParts.push(<span key="space" className="mx-0.5"></span>);
 
         if (priceInfo.isDiscounted && priceInfo.originalTotalPrice) {
            ctaTextParts.push(
-                <s key="s" className="text-inherit opacity-70">
+                <s key="s" className="text-inherit opacity-70 ml-1">
                     <span className="font-normal">₹</span>{priceInfo.originalTotalPrice}
                 </s>
             );
@@ -373,6 +369,19 @@ export default function BillingPage() {
       finalButtonVariant: finalButtonVariant,
     };
   });
+
+  let currentPlanDisplayName = "N/A";
+  if (currentSubscription) {
+    if (currentSubscription.tier.startsWith('premium')) {
+      currentPlanDisplayName = "Premium";
+    } else if (currentSubscription.tier === 'free') {
+      currentPlanDisplayName = ALL_AVAILABLE_PLANS.find(p => p.id === 'free')?.name || "Free Tier";
+    } else {
+      currentPlanDisplayName = ALL_AVAILABLE_PLANS.find(p => p.id === currentSubscription.tier)?.name || currentSubscription.tier;
+    }
+  } else if (!isLoading) {
+    currentPlanDisplayName = "Free Tier"; // Default if no subscription and not loading
+  }
 
 
   if (isLoading) {
@@ -397,35 +406,40 @@ export default function BillingPage() {
           <p className="text-muted-foreground">Manage your subscription and billing details.</p>
         </div>
 
-        {currentSubscription && (
+        {currentSubscription || !isLoading ? ( // Show card if sub exists or loading is done (for Free tier default)
           <Card className="shadow-lg border-primary border-2">
             <CardHeader>
-              <CardTitle className="font-headline text-xl text-primary">Your Current Plan: {ALL_AVAILABLE_PLANS.find(p=>p.id === currentSubscription.tier)?.name || currentSubscription.tier}</CardTitle>
-              <CardDescription>
-                Status: <span className={`font-semibold ${currentSubscription.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
-                  {currentSubscription.status.charAt(0).toUpperCase() + currentSubscription.status.slice(1)}
-                </span>
-              </CardDescription>
+              <CardTitle className="font-headline text-xl text-primary">Your Current Plan: {currentPlanDisplayName}</CardTitle>
+              {currentSubscription && (
+                <CardDescription>
+                    Status: <span className={`font-semibold ${currentSubscription.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
+                    {currentSubscription.status.charAt(0).toUpperCase() + currentSubscription.status.slice(1)}
+                    </span>
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent className="space-y-2">
-              {currentSubscription.plan_start_date && (
+              {currentSubscription?.plan_start_date && (
                 <p>Valid From: {new Date(currentSubscription.plan_start_date).toLocaleDateString()}</p>
               )}
-              {currentSubscription.plan_expiry_date && currentSubscription.status === 'active' && (
+              {currentSubscription?.plan_expiry_date && currentSubscription?.status === 'active' && (
                 <p>Valid Until: {new Date(currentSubscription.plan_expiry_date).toLocaleDateString()}</p>
               )}
-               {currentSubscription.razorpay_order_id && (
+               {currentSubscription?.razorpay_order_id && (
                 <p className="text-xs text-muted-foreground">Last Order ID: {currentSubscription.razorpay_order_id}</p>
               )}
+               {!currentSubscription && !isLoading && ( // Specifically for when user has NO subscription record at all (defaults to Free)
+                 <p className="text-sm text-muted-foreground">You are currently on the Free Tier.</p>
+               )}
             </CardContent>
           </Card>
-        )}
+        ): null}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {displayedPlans.map((plan) => {
             const { priceInfo } = plan;
             return (
-            <Card key={plan.id} className={cn("flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 relative", plan.isCurrent ? 'border-accent border-2' : '', plan.isPopular ? 'border-primary border-2' : '')}>
+            <Card key={plan.id} className={cn("flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 relative", plan.isCurrent ? 'border-accent border-2' : '', plan.isPopular && !plan.isCurrent ? 'border-primary border-2' : '')}>
               {plan.isPopular && !plan.isCurrent && (
                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <div className="bg-primary text-primary-foreground text-xs font-semibold py-1 px-3 rounded-full shadow-md">
@@ -444,7 +458,7 @@ export default function BillingPage() {
                   ) : priceInfo.isDiscounted && priceInfo.discountedPricePerMonth ? (
                     <div className="flex items-baseline flex-wrap gap-x-1.5">
                       <div className="flex items-baseline">
-                        <span className="text-3xl font-bold"><span className="font-normal">₹</span>{priceInfo.discountedPricePerMonth}</span>
+                        <span className="font-normal">₹</span>{priceInfo.discountedPricePerMonth}
                         <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
                       </div>
                       {priceInfo.discountPercentage && (
@@ -456,7 +470,7 @@ export default function BillingPage() {
                   ) : ( 
                     priceInfo.priceMonthlyDirect && (
                         <div className="flex items-baseline">
-                        <span className="text-3xl font-bold"><span className="font-normal">₹</span>{priceInfo.priceMonthlyDirect}</span>
+                        <span className="font-normal">₹</span>{priceInfo.priceMonthlyDirect}
                         <span className="text-base font-normal text-muted-foreground self-end">/mo</span>
                         </div>
                     )
