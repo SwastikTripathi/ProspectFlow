@@ -37,12 +37,10 @@ export interface FollowUp {
   status: 'Pending' | 'Sent' | 'Skipped';
 }
 
-// Represents a contact as associated with a job opening, primarily for display and form handling
 export interface JobOpeningAssociatedContact {
-  contact_id: string; // ID from the main 'contacts' table
+  contact_id: string; 
   name: string;
   email: string;
-  // We don't store company_name_cache or role here as it's derived from the main Contact record
 }
 
 
@@ -52,8 +50,7 @@ export interface JobOpening {
   created_at?: string;
   company_id?: string | null;
   company_name_cache: string;
-  // Removed: contact_id, contact_name_cache, contact_email_cache
-  associated_contacts?: JobOpeningAssociatedContact[]; // New way to store multiple contacts
+  associated_contacts?: JobOpeningAssociatedContact[]; 
   role_title: string;
   initial_email_date: Date;
   followUps?: FollowUp[];
@@ -82,7 +79,7 @@ export type Tag = {
   color?: string;
 };
 
-export type SubscriptionTier = 'free' | 'basic' | 'premium';
+export type SubscriptionTier = 'free' | 'premium-monthly' | 'premium-half-yearly' | 'premium-yearly';
 export type UsagePreference = 'job_hunt' | 'sales' | 'networking' | 'other';
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending_payment' | 'trialing' | 'payment_failed';
 
@@ -108,14 +105,16 @@ export interface PlanFeature {
 export interface AvailablePlan {
   id: SubscriptionTier;
   name: string;
-  priceMonthly: number;
-  priceAnnual?: number;
+  priceMonthly: number; // Base price per month for calculation
+  durationMonths: number;
+  discountPercentage?: number;
   description: string;
   features: PlanFeature[];
   cta: string;
   isCurrent?: boolean;
   isPopular?: boolean;
   disabled?: boolean;
+  tierTypeForLimits: 'free' | 'premium'; // To map to PLAN_LIMITS keys
 }
 
 export interface FollowUpTemplateContent {
@@ -139,5 +138,10 @@ export interface UserSettings {
   updated_at?: string;
 }
     
-
+// For AddJobOpeningDialog and EditJobOpeningDialog's contact fields
+export interface ContactFormEntry {
+  contact_id?: string;
+  contactName: string;
+  contactEmail: string;
+}
     

@@ -7,26 +7,37 @@ export type PlanLimits = {
   jobOpenings: number;
 };
 
-export const PLAN_LIMITS: Record<SubscriptionTier, PlanLimits> = {
-  free: {
+const premiumLimitsConfig: PlanLimits = {
+  companies: 100,
+  contacts: 100,
+  jobOpenings: 100,
+};
+
+export const PLAN_LIMITS: Record<'free' | 'premium', PlanLimits> = {
+  'free': {
     companies: 25,
     contacts: 25,
     jobOpenings: 30,
   },
-  premium: {
-    companies: 100,
-    contacts: 100,
-    jobOpenings: 150,
-  },
+  'premium': premiumLimitsConfig,
 };
 
-export function getLimitsForTier(tier: SubscriptionTier): PlanLimits {
-  const validTier = tier && PLAN_LIMITS[tier] ? tier : 'free';
-  return PLAN_LIMITS[validTier];
+// Helper function to get limits based on the simplified tier type ('free' or 'premium')
+export function getLimitsForTier(tierType: 'free' | 'premium'): PlanLimits {
+  return PLAN_LIMITS[tierType] || PLAN_LIMITS.free;
 }
 
-const premiumFeatures = [
-  { text: 'Track up to 150 job openings', included: true },
+
+const freeFeatures: AvailablePlan['features'] = [
+  { text: 'Track up to 30 job openings', included: true },
+  { text: 'Manage up to 25 contacts', included: true },
+  { text: 'Store up to 25 companies', included: true },
+  { text: 'Basic email templates', included: true },
+  { text: 'Community support', included: false },
+];
+
+const premiumFeatures: AvailablePlan['features'] = [
+  { text: 'Track up to 100 job openings', included: true },
   { text: 'Manage up to 100 contacts', included: true },
   { text: 'Store up to 100 companies', included: true },
   { text: 'Advanced contact management & tagging', included: true },
@@ -34,7 +45,7 @@ const premiumFeatures = [
   { text: 'Unlimited saved email templates', included: true },
   { text: 'AI-powered email suggestions (Coming Soon)', included: true },
   { text: 'Priority support', included: true },
-  { text: 'Team features (Coming Soon)', included: true },
+  // { text: 'Team features (Coming Soon)', included: true }, // Keep this commented or remove if not planned soon
 ];
 
 export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
@@ -45,13 +56,7 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     priceMonthly: 0,
     durationMonths: 12 * 99, // Effectively infinite for free tier
     description: 'Get started with core features for free.',
-    features: [
-      { text: 'Track up to 30 job openings', included: true },
-      { text: 'Manage up to 25 contacts', included: true },
-      { text: 'Store up to 25 companies', included: true },
-      { text: 'Basic email templates', included: true },
-      { text: 'Community support', included: false },
-    ],
+    features: freeFeatures,
     cta: 'Switch to Free',
     isPopular: false,
   },
@@ -72,8 +77,8 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     name: 'Premium - 6 Months',
     priceMonthly: 100, // Base monthly price for calculation
     durationMonths: 6,
-    discountPercentage: 5,
-    description: 'for serious folks',
+    discountPercentage: 5, // 5% discount
+    description: 'Save 5% with a 6-month commitment.',
     features: premiumFeatures,
     cta: 'Subscribe for 6 Months',
     isPopular: true,
@@ -84,11 +89,10 @@ export const ALL_AVAILABLE_PLANS: AvailablePlan[] = [
     name: 'Premium - 12 Months',
     priceMonthly: 100, // Base monthly price for calculation
     durationMonths: 12,
-    discountPercentage: 10,
-    description: 'for legends',
+    discountPercentage: 10, // 10% discount
+    description: 'Best value! Save 10% with an annual plan.',
     features: premiumFeatures,
     cta: 'Subscribe for 12 Months',
     isPopular: false,
   },
 ];
-

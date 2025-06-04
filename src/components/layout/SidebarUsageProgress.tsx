@@ -11,8 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Briefcase, CreditCard } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
-import { getLimitsForTier, type SubscriptionTier } from '@/lib/config';
-import type { UserSubscription } from '@/lib/types';
+import { getLimitsForTier, ALL_AVAILABLE_PLANS } from '@/lib/config';
+import type { UserSubscription, SubscriptionTier, AvailablePlan } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { differenceInDays, isFuture } from 'date-fns';
 
@@ -27,9 +27,11 @@ interface SidebarUsageProgressProps {
 }
 
 interface SubscriptionInfo {
-  tier: SubscriptionTier;
+  tierId: SubscriptionTier; // e.g. 'premium-monthly'
+  tierTypeForLimits: 'free' | 'premium'; // e.g. 'premium'
   status: string;
   expiryDate: Date | null;
+  planName: string;
 }
 
 const StatItem: React.FC<{
@@ -125,20 +127,19 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         if (contactsError) throw contactsError;
         if (jobOpeningsError) throw jobOpeningsError;
         if (subscriptionError && subscriptionError.code !== 'PGRST116') throw subscriptionError;
+        
+        const currentTierId = (dbSubscriptionData?.tier as SubscriptionTier) || 'free';
+        const currentPlanDetails = ALL_AVAILABLE_PLANS.find(p => p.id === currentTierId) || ALL_AVAILABLE_PLANS.find(p => p.id === 'free')!;
 
-        if (dbSubscriptionData) {
-          setSubscriptionInfo({
-            tier: (dbSubscriptionData.tier as SubscriptionTier) || 'free',
-            status: dbSubscriptionData.status || 'active', // Default if status is null
-            expiryDate: dbSubscriptionData.plan_expiry_date ? new Date(dbSubscriptionData.plan_expiry_date) : null,
-          });
-        } else {
-          setSubscriptionInfo({ tier: 'free', status: 'active', expiryDate: null });
-        }
-
-        const activeSubscription = dbSubscriptionData as UserSubscription | null;
-        const tierForLimits: SubscriptionTier = (activeSubscription && activeSubscription.status === 'active' ? activeSubscription.tier : 'free') as SubscriptionTier;
-        const limits = getLimitsForTier(tierForLimits);
+        setSubscriptionInfo({
+            tierId: currentTierId,
+            tierTypeForLimits: currentPlanDetails.tierTypeForLimits,
+            status: dbSubscriptionData?.status || 'active',
+            expiryDate: dbSubscriptionData?.plan_expiry_date ? new Date(dbSubscriptionData.plan_expiry_date) : null,
+            planName: currentPlanDetails.name,
+        });
+        
+        const limits = getLimitsForTier(currentPlanDetails.tierTypeForLimits);
 
         setStats({
           companies: { current: companiesCount ?? 0, limit: limits.companies },
@@ -150,7 +151,21 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         console.error("Error fetching sidebar data:", error);
         if (isMounted) {
           setStats(null);
-          setSubscriptionInfo(null);
+          // Fallback to free tier info on error for limits
+          const freePlanDetails = ALL_AVAILABLE_PLANS.find(p => p.id === 'free')!;
+          setSubscriptionInfo({
+            tierId: 'free',
+            tierTypeForLimits: 'free',
+            status: 'error',
+            expiryDate: null,
+            planName: freePlanDetails.name,
+          });
+           const limits = getLimitsForTier('free');
+            setStats({ // Sensible defaults on error
+              companies: { current: 0, limit: limits.companies },
+              contacts: { current: 0, limit: limits.contacts },
+              jobOpenings: { current: 0, limit: limits.jobOpenings },
+            });
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -174,11 +189,11 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
       );
     }
 
-    const { tier, expiryDate, status } = subscriptionInfo;
-    const isActivePremium = tier === 'premium' && status === 'active' && expiryDate && isFuture(expiryDate);
+    const { tierId, tierTypeForLimits, expiryDate, status, planName } = subscriptionInfo;
+    const isActivePaid = tierTypeForLimits === 'premium' && status === 'active' && expiryDate && isFuture(expiryDate);
 
-    if (isActivePremium) {
-      const daysLeft = differenceInDays(expiryDate, new Date());
+    if (isActivePaid) {
+      const daysLeft = differenceInDays(expiryDate!, new Date()); // expiryDate is checked
       let timeLeftMessage = "";
       if (daysLeft < 0) timeLeftMessage = "Expired";
       else if (daysLeft === 0) timeLeftMessage = "Expires today";
@@ -188,12 +203,12 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         <div className={cn("w-full", isCollapsed ? "py-1 text-center" : "py-2")}>
           {isCollapsed ? (
             <>
-              <p className="text-xs font-semibold">Premium</p>
+              <p className="text-xs font-semibold truncate" title={planName}>{planName.split(' - ')[0]}</p> {/* Show 'Premium' for collapsed */}
               <p className="text-[0.65rem] leading-tight text-sidebar-foreground/80">{timeLeftMessage}</p>
             </>
           ) : (
             <div className="flex justify-between items-center w-full">
-              <p className="text-sm font-semibold text-sidebar-foreground">Premium Plan</p>
+              <p className="text-sm font-semibold text-sidebar-foreground truncate" title={planName}>{planName}</p>
               <p className="text-xs text-sidebar-foreground/80">{timeLeftMessage}</p>
             </div>
           )}
@@ -206,7 +221,7 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
               <div className="flex justify-center w-full cursor-default px-1 mb-1">{premiumContent}</div>
             </TooltipTrigger>
             <TooltipContent side="right" align="center" className="text-xs">
-              <p>Premium Plan</p>
+              <p>{planName}</p>
               <p>{timeLeftMessage}</p>
             </TooltipContent>
           </Tooltip>
@@ -273,7 +288,7 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
           <StatItem icon={Building2} label="Companies" current={stats.companies.current} limit={stats.companies.limit} />
         </div>
       )}
-       {!isLoading && !stats && (
+       {!isLoading && !stats && !subscriptionInfo?.status?.includes('error') && (
         <div className={cn("p-2 text-xs text-sidebar-foreground/60", isCollapsed ? "text-center" : "text-left")}>Usage Stats N/A</div>
       )}
     </>
