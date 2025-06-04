@@ -31,7 +31,7 @@ interface SubscriptionInfo {
   tierTypeForLimits: 'free' | 'premium'; // e.g. 'premium'
   status: string;
   expiryDate: Date | null;
-  planName: string;
+  planDisplayName: string; // This will be 'Premium Plan' or 'Free Plan'
 }
 
 const StatItem: React.FC<{
@@ -130,13 +130,15 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         
         const currentTierId = (dbSubscriptionData?.tier as SubscriptionTier) || 'free';
         const currentPlanDetails = ALL_AVAILABLE_PLANS.find(p => p.id === currentTierId) || ALL_AVAILABLE_PLANS.find(p => p.id === 'free')!;
+        
+        const planDisplayName = currentPlanDetails.tierTypeForLimits === 'premium' ? 'Premium Plan' : currentPlanDetails.name;
 
         setSubscriptionInfo({
             tierId: currentTierId,
             tierTypeForLimits: currentPlanDetails.tierTypeForLimits,
             status: dbSubscriptionData?.status || 'active',
             expiryDate: dbSubscriptionData?.plan_expiry_date ? new Date(dbSubscriptionData.plan_expiry_date) : null,
-            planName: currentPlanDetails.name,
+            planDisplayName: planDisplayName,
         });
         
         const limits = getLimitsForTier(currentPlanDetails.tierTypeForLimits);
@@ -151,17 +153,16 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         console.error("Error fetching sidebar data:", error);
         if (isMounted) {
           setStats(null);
-          // Fallback to free tier info on error for limits
           const freePlanDetails = ALL_AVAILABLE_PLANS.find(p => p.id === 'free')!;
           setSubscriptionInfo({
             tierId: 'free',
             tierTypeForLimits: 'free',
             status: 'error',
             expiryDate: null,
-            planName: freePlanDetails.name,
+            planDisplayName: freePlanDetails.name,
           });
            const limits = getLimitsForTier('free');
-            setStats({ // Sensible defaults on error
+            setStats({ 
               companies: { current: 0, limit: limits.companies },
               contacts: { current: 0, limit: limits.contacts },
               jobOpenings: { current: 0, limit: limits.jobOpenings },
@@ -189,11 +190,11 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
       );
     }
 
-    const { tierId, tierTypeForLimits, expiryDate, status, planName } = subscriptionInfo;
+    const { tierTypeForLimits, expiryDate, status, planDisplayName } = subscriptionInfo;
     const isActivePaid = tierTypeForLimits === 'premium' && status === 'active' && expiryDate && isFuture(expiryDate);
 
     if (isActivePaid) {
-      const daysLeft = differenceInDays(expiryDate!, new Date()); // expiryDate is checked
+      const daysLeft = differenceInDays(expiryDate!, new Date()); 
       let timeLeftMessage = "";
       if (daysLeft < 0) timeLeftMessage = "Expired";
       else if (daysLeft === 0) timeLeftMessage = "Expires today";
@@ -203,12 +204,12 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
         <div className={cn("w-full", isCollapsed ? "py-1 text-center" : "py-2")}>
           {isCollapsed ? (
             <>
-              <p className="text-xs font-semibold truncate" title={planName}>{planName.split(' - ')[0]}</p> {/* Show 'Premium' for collapsed */}
+              <p className="text-xs font-semibold truncate" title={planDisplayName}>{planDisplayName.split(' - ')[0]}</p>
               <p className="text-[0.65rem] leading-tight text-sidebar-foreground/80">{timeLeftMessage}</p>
             </>
           ) : (
             <div className="flex justify-between items-center w-full">
-              <p className="text-sm font-semibold text-sidebar-foreground truncate" title={planName}>{planName}</p>
+              <p className="text-sm font-semibold text-sidebar-foreground truncate" title={planDisplayName}>{planDisplayName}</p>
               <p className="text-xs text-sidebar-foreground/80">{timeLeftMessage}</p>
             </div>
           )}
@@ -221,7 +222,7 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
               <div className="flex justify-center w-full cursor-default px-1 mb-1">{premiumContent}</div>
             </TooltipTrigger>
             <TooltipContent side="right" align="center" className="text-xs">
-              <p>{planName}</p>
+              <p>{planDisplayName}</p>
               <p>{timeLeftMessage}</p>
             </TooltipContent>
           </Tooltip>
@@ -232,10 +233,10 @@ export function SidebarUsageProgress({ user }: SidebarUsageProgressProps) {
       const freePlanContent = (
          <div className={cn("w-full", isCollapsed ? "flex flex-col items-center py-1" : "py-2")}>
           {isCollapsed ? (
-            <p className="text-xs font-semibold">Free Plan</p>
+            <p className="text-xs font-semibold">{planDisplayName}</p>
           ) : (
             <div className="flex justify-between items-center w-full">
-              <p className="text-sm font-semibold text-sidebar-foreground">Free Plan</p>
+              <p className="text-sm font-semibold text-sidebar-foreground">{planDisplayName}</p>
               <Button asChild variant="outline" size="sm" className="h-7 text-xs bg-sidebar-accent/10 hover:bg-sidebar-accent/30 border-sidebar-accent/50 text-sidebar-accent hover:text-sidebar-accent focus-visible:ring-sidebar-accent">
                 <Link href="/settings/billing">Upgrade</Link>
               </Button>
