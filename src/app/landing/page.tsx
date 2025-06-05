@@ -6,9 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building } from 'lucide-react';
+import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building } from 'lucide-react'; // Added ArrowRight
 import { Logo } from '@/components/icons/Logo';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge'; // Added Badge
 
 const features = [
   {
@@ -214,7 +214,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* New Inspired Section */}
+        {/* Section: Why Professionals Streamline with ProspectFlow */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container px-4 md:px-6">
             <div className="text-left max-w-3xl mx-auto md:mx-0 mb-12 md:mb-16">
@@ -232,14 +232,14 @@ export default function LandingPage() {
                 <p className="text-muted-foreground leading-relaxed">
                   ProspectFlow cuts through the noise, helping your team manage outreach faster and more effectively. More targeted connections lead to more opportunities. Designed for daily use, ProspectFlow makes tracking simple, so you can focus on building relationships, not fighting your tools. Get started in minutes, not months.
                 </p>
-                <div className="border-l-4 border-primary pl-6 py-4 bg-secondary/30 rounded-r-lg">
+                <div className="border-l-4 border-primary pl-6 py-4 bg-card rounded-r-lg shadow">
                   <blockquote className="text-muted-foreground italic mb-4">
                     "{testimonials[0].quote}"
                   </blockquote>
                   <div className="flex items-center">
                     <Image 
-                      data-ai-hint="person portrait" 
-                      src="https://placehold.co/40x40.png" 
+                      data-ai-hint={testimonials[0].dataAiHint} 
+                      src={testimonials[0].avatar} 
                       alt={testimonials[0].name} 
                       width={40} 
                       height={40} 
@@ -253,14 +253,90 @@ export default function LandingPage() {
                 </div>
               </div>
               <div>
-                <div className="relative aspect-[4/3] lg:aspect-[5/4] rounded-xl shadow-2xl overflow-hidden border border-border/20">
+                <div className="relative aspect-[3/2] rounded-xl shadow-2xl overflow-hidden border border-border/20">
                   <Image 
-                    src="https://placehold.co/600x450.png" 
+                    src="https://placehold.co/1200x800.png" 
                     alt="ProspectFlow App Dashboard Mockup" 
                     layout="fill"
                     objectFit="cover"
                     className="bg-muted"
                     data-ai-hint="app dashboard" 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* New Section 1: Everything you need */}
+        <section className="py-16 md:py-24 bg-secondary/30">
+          <div className="container px-4 md:px-6">
+            <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="order-last md:order-first">
+                <div className="relative aspect-[3/2] rounded-xl shadow-2xl overflow-hidden border border-border/20">
+                  <Image 
+                    src="https://placehold.co/1200x900.png" 
+                    alt="ProspectFlow unified platform illustration" 
+                    layout="fill"
+                    objectFit="cover"
+                    className="bg-muted"
+                    data-ai-hint="email marketing tool" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-6">
+                <h3 className="text-2xl md:text-3xl font-semibold font-headline text-foreground">Everything you need to manage outreach, all in one spot.</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Stop juggling multiple tools just to keep track of prospects. Customers can get lost in the shuffle! We believe in keeping it simple. Every tool you need for your outreach process either lives within ProspectFlow or integrates with it seamlessly. You'll send emails, manage follow-ups, and track your pipeline, all without ever leaving ProspectFlow.
+                </p>
+                <div className="border-l-4 border-primary pl-6 py-4 bg-card rounded-r-lg shadow">
+                  <blockquote className="text-muted-foreground italic mb-4">
+                    "{testimonials[1].quote}"
+                  </blockquote>
+                  <div className="flex items-center">
+                    <Image 
+                      data-ai-hint={testimonials[1].dataAiHint} 
+                      src={testimonials[1].avatar} 
+                      alt={testimonials[1].name} 
+                      width={40} 
+                      height={40} 
+                      className="rounded-full mr-3" 
+                    />
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">{testimonials[1].name}</p>
+                      <p className="text-xs text-muted-foreground">{testimonials[1].role}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* New Section 2: Automations */}
+        <section className="py-16 md:py-24 bg-background">
+          <div className="container px-4 md:px-6">
+            <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="space-y-6">
+                <h3 className="text-2xl md:text-3xl font-semibold font-headline text-foreground">Automations that keep you laser-focused on connecting, not admin work.</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Manually tracking emails that were sent, calls that were made, or reminders to follow up are things of the past. We automate much of the admin work so you can focus your efforts on building relationships and closing your next opportunity.
+                </p>
+                <div className="border-l-4 border-accent pl-6 py-4 bg-card rounded-r-lg shadow">
+                  <blockquote className="text-foreground italic">
+                    "I can automate responses, emails and trigger actions very easily, improving my chances of effectively managing many more prospects."
+                  </blockquote>
+                </div>
+              </div>
+              <div>
+                <div className="relative aspect-[3/2] rounded-xl shadow-2xl overflow-hidden border border-border/20">
+                  <Image 
+                    src="https://placehold.co/1200x900.png" 
+                    alt="ProspectFlow automations illustration" 
+                    layout="fill"
+                    objectFit="cover"
+                    className="bg-muted"
+                    data-ai-hint="workflow automation app" 
                   />
                 </div>
               </div>
