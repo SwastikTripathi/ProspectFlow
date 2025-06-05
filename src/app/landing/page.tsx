@@ -6,8 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap } from 'lucide-react';
-import { Logo } from '@/components/icons/Logo'; // Assuming logo can be used standalone
+import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building } from 'lucide-react';
+import { Logo } from '@/components/icons/Logo';
+import { Badge } from '@/components/ui/badge';
 
 const features = [
   {
@@ -53,20 +54,97 @@ const testimonials = [
   },
 ];
 
+function HeroVisual() {
+  const mockCardsData = [
+    {
+      type: 'JOB OPENING',
+      title: 'Software Engineer',
+      company: 'Innovate Inc.',
+      status: 'Applied',
+      statusColor: 'bg-blue-500 text-blue-50',
+      avatar: 'https://placehold.co/32x32.png',
+      dataAiHint: 'office building',
+      icon: <Briefcase className="h-4 w-4 text-muted-foreground" />
+    },
+    {
+      type: 'CONTACT',
+      title: 'Alex Chen',
+      company: 'Hiring Manager @ Innovate Inc.',
+      status: 'Emailed',
+      statusColor: 'bg-green-500 text-green-50',
+      avatar: 'https://placehold.co/32x32.png',
+      dataAiHint: 'person professional',
+      icon: <Users className="h-4 w-4 text-muted-foreground" />
+    },
+    {
+      type: 'REMINDER',
+      title: 'Follow up: Sarah K.',
+      company: 'Product Designer Role',
+      status: 'Due Today',
+      statusColor: 'bg-yellow-500 text-yellow-50',
+      avatar: 'https://placehold.co/32x32.png',
+      dataAiHint: 'calendar alert',
+      icon: <MailCheck className="h-4 w-4 text-muted-foreground" />
+    },
+    {
+      type: 'COMPANY',
+      title: 'Tech Solutions Ltd.',
+      company: 'Next step: Initial Outreach',
+      status: 'Watching',
+      statusColor: 'bg-purple-500 text-purple-50',
+      avatar: 'https://placehold.co/32x32.png',
+      dataAiHint: 'modern building',
+      icon: <Building className="h-4 w-4 text-muted-foreground" />
+    },
+  ];
+
+  return (
+    <div className="mt-12 lg:mt-20">
+      <div className="relative max-w-5xl mx-auto p-1 bg-card rounded-xl shadow-2xl border border-border/20 overflow-hidden">
+        <div className="p-4 sm:p-5 lg:p-6 bg-background rounded-[0.6rem]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {mockCardsData.map((card, index) => (
+              <div key={index} className="bg-card p-3 rounded-lg shadow-md border border-border/50 hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-2">
+                  <Badge variant="secondary" className={`text-xs ${card.statusColor} border-transparent`}>{card.status}</Badge>
+                  {card.icon}
+                </div>
+                <div className="flex items-center mb-1.5">
+                   <Image 
+                    src={card.avatar} 
+                    alt={card.title} 
+                    width={28} 
+                    height={28} 
+                    className="rounded-full mr-2 border border-border/20" 
+                    data-ai-hint={card.dataAiHint}
+                  />
+                  <h4 className="text-sm font-semibold text-card-foreground truncate leading-tight">{card.title}</h4>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">{card.company}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background to-secondary/30">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background to-secondary/10">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4 md:px-6">
           <Link href="/landing" className="mr-6 flex items-center space-x-2">
             <Logo />
           </Link>
-          <nav className="flex items-center space-x-4">
+          <nav className="flex items-center space-x-2 sm:space-x-4">
             <Button variant="ghost" asChild>
               <Link href="/auth">Sign In</Link>
             </Button>
-            <Button asChild className="shadow-lg">
-              <Link href="/auth?action=signup">Sign Up Free</Link>
+            <Button asChild className="shadow-md">
+              <Link href="/auth?action=signup">Try for Free</Link>
             </Button>
           </nav>
         </div>
@@ -74,19 +152,28 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 md:py-32 text-center bg-background shadow-inner">
+        <section className="py-20 md:py-28 text-center bg-background">
           <div className="container px-4 md:px-6">
-            <Zap className="mx-auto h-16 w-16 text-primary mb-6" />
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter mb-6 font-headline text-foreground">
-              Supercharge Your Outreach with ProspectFlow
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter mb-6 font-headline text-foreground">
+              Stop losing leads and<br className="hidden sm:inline" /> missing <span className="text-primary">follow-ups</span>.
             </h1>
-            <p className="max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground mb-8">
-              Stop juggling spreadsheets and scattered notes. ProspectFlow helps you manage job applications, sales leads, and professional networking like a pro.
+            <p className="max-w-2xl mx-auto text-md sm:text-lg md:text-xl text-muted-foreground mb-8">
+              ProspectFlow is the easy-to-use tool built to streamline your outreach: manage job applications, sales leads, and professional networking like a pro.
             </p>
-            <Button size="lg" className="text-lg px-8 py-6 shadow-xl" asChild>
-              <Link href="/auth?action=signup">Get Started for Free</Link>
-            </Button>
-            <p className="text-xs text-muted-foreground mt-4">No credit card required for Free Tier.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6">
+                <Button size="lg" className="text-lg px-8 py-6 shadow-xl w-full sm:w-auto" asChild>
+                <Link href="/auth?action=signup">Get Started for Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                </Button>
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto" asChild>
+                <Link href="#features">Explore Features</Link>
+                </Button>
+            </div>
+            <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-1.5 text-green-500"/>Free Tier available</span>
+                <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-1.5 text-green-500"/>No credit card required to start</span>
+                <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-1.5 text-green-500"/>Automated Follow-up Reminders</span>
+            </div>
+            <HeroVisual />
           </div>
         </section>
 
@@ -100,9 +187,9 @@ export default function LandingPage() {
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
               {features.map((feature) => (
                 <Card key={feature.title} className="text-center shadow-lg hover:shadow-xl transition-shadow bg-card">
-                  <CardHeader className="items-center">
-                    {feature.icon}
-                    <CardTitle className="font-headline">{feature.title}</CardTitle>
+                  <CardHeader className="items-center pb-4">
+                    {React.cloneElement(feature.icon, { className: "h-8 w-8 text-primary mb-3" })}
+                    <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">{feature.description}</p>
@@ -113,38 +200,11 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* How it Works Section (Simplified) */}
+        {/* Testimonials Section */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container px-4 md:px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">Simple Steps to Success</h2>
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center text-xl font-bold mb-4 shadow-md">1</div>
-                <h3 className="text-xl font-semibold mb-2 font-headline">Add Prospects</h3>
-                <p className="text-sm text-muted-foreground">Quickly add companies, contacts, and job openings.</p>
-                 <Image src="https://placehold.co/600x400.png" alt="Add Prospects illustration" data-ai-hint="data entry form" width={600} height={400} className="mt-4 rounded-lg shadow-md aspect-video object-cover" />
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center text-xl font-bold mb-4 shadow-md">2</div>
-                <h3 className="text-xl font-semibold mb-2 font-headline">Track Progress</h3>
-                <p className="text-sm text-muted-foreground">Update statuses and log your interactions easily.</p>
-                 <Image src="https://placehold.co/600x400.png" alt="Track Progress illustration" data-ai-hint="dashboard progress" width={600} height={400} className="mt-4 rounded-lg shadow-md aspect-video object-cover" />
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center text-xl font-bold mb-4 shadow-md">3</div>
-                <h3 className="text-xl font-semibold mb-2 font-headline">Follow Up Smartly</h3>
-                <p className="text-sm text-muted-foreground">Get reminders and use templates for consistent outreach.</p>
-                 <Image src="https://placehold.co/600x400.png" alt="Follow Up illustration" data-ai-hint="calendar reminder" width={600} height={400} className="mt-4 rounded-lg shadow-md aspect-video object-cover" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="py-16 md:py-24 bg-secondary/50">
-          <div className="container px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">Loved by Professionals</h2>
-            <div className="grid gap-8 md:grid-cols-2">
+            <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2 max-w-4xl mx-auto">
               {testimonials.map((testimonial) => (
                 <Card key={testimonial.name} className="shadow-lg bg-card">
                   <CardContent className="pt-6">
@@ -164,7 +224,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-32 text-center bg-background">
+        <section className="py-20 md:py-28 text-center bg-secondary/50">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6 font-headline text-foreground">
               Ready to Streamline Your Outreach?
@@ -182,9 +242,6 @@ export default function LandingPage() {
       <footer className="py-8 border-t bg-background">
         <div className="container px-4 md:px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} ProspectFlow. All rights reserved.</p>
-          {/* <p className="mt-1">
-            <Link href="/privacy" className="hover:underline">Privacy Policy</Link> | <Link href="/terms" className="hover:underline">Terms of Service</Link>
-          </p> */}
         </div>
       </footer>
     </div>
