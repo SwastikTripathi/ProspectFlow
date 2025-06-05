@@ -42,14 +42,14 @@ const testimonials = [
     quote: "ProspectFlow revolutionized how I manage my job search. I'm more organized and follow up more effectively!",
     name: 'Alex P.',
     role: 'Software Engineer',
-    avatar: 'https://placehold.co/100x100.png', // Main testimonial avatar
+    avatar: 'https://placehold.co/100x100.png', 
     dataAiHint: 'person portrait'
   },
   {
     quote: "As a sales professional, keeping track of leads and follow-ups is crucial. ProspectFlow makes it effortless.",
     name: 'Sarah K.',
     role: 'Sales Manager',
-    avatar: 'https://placehold.co/100x100.png', // Main testimonial avatar
+    avatar: 'https://placehold.co/100x100.png', 
     dataAiHint: 'professional woman'
   },
 ];
@@ -217,8 +217,8 @@ export default function LandingPage() {
         {/* New Inspired Section */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container px-4 md:px-6">
-            <div className="text-left md:text-center max-w-3xl mx-auto mb-12 md:mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-headline text-foreground mb-2">
+            <div className="text-left max-w-3xl mx-auto md:mx-0 mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-headline text-foreground">
                 Why Professionals Streamline with ProspectFlow
               </h2>
               <p className="text-xl md:text-2xl text-muted-foreground">
@@ -273,7 +273,7 @@ export default function LandingPage() {
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">Loved by Professionals</h2>
             <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2 max-w-4xl mx-auto">
-              {testimonials.map((testimonial, index) => ( // Use index for key if names are not unique
+              {testimonials.map((testimonial, index) => ( 
                 <Card key={testimonial.name + index} className="shadow-lg bg-card">
                   <CardContent className="pt-6">
                     <blockquote className="text-lg italic text-foreground mb-4">"{testimonial.quote}"</blockquote>
@@ -315,3 +315,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
