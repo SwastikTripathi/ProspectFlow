@@ -42,14 +42,14 @@ const testimonials = [
     quote: "ProspectFlow revolutionized how I manage my job search. I'm more organized and follow up more effectively!",
     name: 'Alex P.',
     role: 'Software Engineer',
-    avatar: 'https://placehold.co/100x100.png',
+    avatar: 'https://placehold.co/100x100.png', // Main testimonial avatar
     dataAiHint: 'person portrait'
   },
   {
     quote: "As a sales professional, keeping track of leads and follow-ups is crucial. ProspectFlow makes it effortless.",
     name: 'Sarah K.',
     role: 'Sales Manager',
-    avatar: 'https://placehold.co/100x100.png',
+    avatar: 'https://placehold.co/100x100.png', // Main testimonial avatar
     dataAiHint: 'professional woman'
   },
 ];
@@ -213,14 +213,68 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* New Inspired Section */}
+        <section className="py-16 md:py-24 bg-background">
+          <div className="container px-4 md:px-6">
+            <div className="text-left md:text-center max-w-3xl mx-auto mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-headline text-foreground mb-2">
+                Why Professionals Streamline with ProspectFlow
+              </h2>
+              <p className="text-xl md:text-2xl text-muted-foreground">
+                Focus on connections, not on <span className="text-primary font-semibold">clutter</span>.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-semibold font-headline text-foreground">Built for Efficiency and Action</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  ProspectFlow cuts through the noise, helping your team manage outreach faster and more effectively. More targeted connections lead to more opportunities. Designed for daily use, ProspectFlow makes tracking simple, so you can focus on building relationships, not fighting your tools. Get started in minutes, not months.
+                </p>
+                <div className="border-l-4 border-primary pl-6 py-4 bg-secondary/30 rounded-r-lg">
+                  <blockquote className="text-muted-foreground italic mb-4">
+                    "{testimonials[0].quote}"
+                  </blockquote>
+                  <div className="flex items-center">
+                    <Image 
+                      data-ai-hint="person portrait" 
+                      src="https://placehold.co/40x40.png" 
+                      alt={testimonials[0].name} 
+                      width={40} 
+                      height={40} 
+                      className="rounded-full mr-3" 
+                    />
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">{testimonials[0].name}</p>
+                      <p className="text-xs text-muted-foreground">{testimonials[0].role}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="relative aspect-[4/3] lg:aspect-[5/4] rounded-xl shadow-2xl overflow-hidden border border-border/20">
+                  <Image 
+                    src="https://placehold.co/600x450.png" 
+                    alt="ProspectFlow App Dashboard Mockup" 
+                    layout="fill"
+                    objectFit="cover"
+                    className="bg-muted"
+                    data-ai-hint="app dashboard" 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
         
         {/* Testimonials Section */}
-        <section className="py-16 md:py-24 bg-background">
+        <section className="py-16 md:py-24 bg-secondary/50">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">Loved by Professionals</h2>
             <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2 max-w-4xl mx-auto">
-              {testimonials.map((testimonial) => (
-                <Card key={testimonial.name} className="shadow-lg bg-card">
+              {testimonials.map((testimonial, index) => ( // Use index for key if names are not unique
+                <Card key={testimonial.name + index} className="shadow-lg bg-card">
                   <CardContent className="pt-6">
                     <blockquote className="text-lg italic text-foreground mb-4">"{testimonial.quote}"</blockquote>
                     <div className="flex items-center">
@@ -238,7 +292,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-28 text-center bg-secondary/50">
+        <section className="py-20 md:py-28 text-center bg-background">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6 font-headline text-foreground">
               Ready to Streamline Your Outreach?
