@@ -6,7 +6,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react'; 
+import { CalendarIcon, Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,10 +19,9 @@ import { Textarea } from '@/components/ui/textarea';
 import type { JobOpening, FollowUp, Company, Contact, JobOpeningAssociatedContact, ContactFormEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// Removed DEFAULT_FOLLOW_UP_CADENCE_DAYS import, it's defined in user settings or a global config now.
 
 const contactEntrySchema = z.object({
-  contact_id: z.string().optional(), 
+  contact_id: z.string().optional(),
   contactName: z.string().min(1, "Contact name is required"),
   contactEmail: z.string().email("Invalid email address").min(1, "Email is required"),
 });
@@ -50,15 +49,15 @@ interface EditJobOpeningDialogProps {
   openingToEdit: JobOpening | null;
   onInitiateDelete: (opening: JobOpening) => void;
   companies: Company[];
-  contacts: Contact[]; 
+  contacts: Contact[];
   onAddNewCompany: (companyName: string) => Promise<Company | null>;
   onAddNewContact: (contactName: string, contactEmail?: string, companyId?: string, companyName?: string) => Promise<Contact | null>;
 }
 
 const JOB_STATUSES: JobOpening['status'][] = [
-    'Watching', 'Applied', 'Emailed', 
-    '1st Follow Up', '2nd Follow Up', '3rd Follow Up', 
-    'No Response', 'Replied - Positive', 'Replied - Negative', 
+    'Watching', 'Applied', 'Emailed',
+    '1st Follow Up', '2nd Follow Up', '3rd Follow Up',
+    'No Response', 'Replied - Positive', 'Replied - Negative',
     'Interviewing', 'Offer', 'Rejected', 'Closed'
 ];
 
@@ -70,7 +69,7 @@ export function EditJobOpeningDialog({
     openingToEdit,
     onInitiateDelete,
     companies,
-    contacts: allExistingContacts, 
+    contacts: allExistingContacts,
     onAddNewCompany,
     onAddNewContact,
 }: EditJobOpeningDialogProps) {
@@ -84,7 +83,7 @@ export function EditJobOpeningDialog({
     resolver: zodResolver(editJobOpeningSchema),
   });
 
-  const { fields: contactFields, append: appendContact, remove: removeContactField } = useFieldArray({ 
+  const { fields: contactFields, append: appendContact, remove: removeContactField } = useFieldArray({
     control: form.control,
     name: "contacts"
   });
@@ -117,7 +116,7 @@ export function EditJobOpeningDialog({
         setContactPopoverStates(formContacts.map(() => false));
         setContactSearchInputs(formContacts.map(fc => fc.contactName || ''));
 
-    } else { 
+    } else {
         form.reset({
             companyName: '', company_id: '', roleTitle: '',
             contacts: [{ contactName: '', contactEmail: '', contact_id: '' }],
@@ -130,15 +129,15 @@ export function EditJobOpeningDialog({
         setContactSearchInputs(['']);
     }
   };
-  
+
   useEffect(() => {
-    if (isOpen) { 
+    if (isOpen) {
       resetFormWithOpeningData(openingToEdit);
     }
-  }, [openingToEdit, isOpen, form.reset]); 
-  
+  }, [openingToEdit, isOpen, form.reset]);
+
    useEffect(() => {
-    if (isOpen) { 
+    if (isOpen) {
         setContactPopoverStates(prev => {
             const newStates = [...prev];
             while (newStates.length < contactFields.length) newStates.push(false);
@@ -168,19 +167,19 @@ export function EditJobOpeningDialog({
   };
 
   const handleDialogCancel = () => {
-    onOpenChange(false); 
+    onOpenChange(false);
   };
 
 
-  if (!openingToEdit && isOpen) { 
+  if (!openingToEdit && isOpen) {
       return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent><DialogHeader><DialogTitle>Error</DialogTitle></DialogHeader>Opening data not available. Please close and retry.</DialogContent>
         </Dialog>
       )
   }
-  if (!openingToEdit) return null; 
-  
+  if (!openingToEdit) return null;
+
   const currentCompanyIdForContactFilter = form.watch('company_id');
   const currentCompanyNameForContactFilter = form.watch('companyName');
 
@@ -216,7 +215,7 @@ export function EditJobOpeningDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="py-2 max-h-[70vh] overflow-y-auto px-2 space-y-4">
-            
+
             <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 items-start">
               <FormField control={form.control} name="companyName" render={({ field }) => (
                   <FormItem>
@@ -249,7 +248,7 @@ export function EditJobOpeningDialog({
                                   setCompanyPopoverOpen(false);
                                   setCompanySearchInput(newCompany? newCompany.name : '');
                                 }} className="text-sm cursor-pointer">
-                                <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                <ChevronsUpDown className="mr-2 h-4 w-4" />
                                 Create: "{companySearchInput}"
                               </CommandItem>)}
                             <CommandGroup>
@@ -275,7 +274,7 @@ export function EditJobOpeningDialog({
                                   setCompanyPopoverOpen(false);
                                   setCompanySearchInput(newCompany? newCompany.name : '');
                                 }} className="text-sm cursor-pointer">
-                                <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                <ChevronsUpDown className="mr-2 h-4 w-4" />
                                 Create: "{companySearchInput}"
                               </CommandItem>)}
                           </CommandList>
@@ -294,8 +293,8 @@ export function EditJobOpeningDialog({
                   <FormField control={form.control} name={`contacts.${index}.contactName`} render={({ field }) => (
                       <FormItem>
                         <FormLabel>Contact Person {index + 1}</FormLabel>
-                         <Popover 
-                            open={contactPopoverStates[index]} 
+                         <Popover
+                            open={contactPopoverStates[index]}
                             onOpenChange={(open) => setContactPopoverStates(prev => prev.map((s, i) => i === index ? open : s))}
                          >
                           <PopoverTrigger asChild>
@@ -313,7 +312,7 @@ export function EditJobOpeningDialog({
                                   setContactSearchInputs(prev => prev.map((s, i) => i === index ? searchValue : s));
                                   field.onChange(searchValue);
                                   form.setValue(`contacts.${index}.contact_id`, undefined);
-                                  form.setValue(`contacts.${index}.contactEmail`, ''); 
+                                  form.setValue(`contacts.${index}.contactEmail`, '');
                                 }}/>
                               <CommandList>
                                 {getFilteredContactsForPopover(contactSearchInputs[index] || '').length === 0 && (contactSearchInputs[index] || '').trim() && (
@@ -335,7 +334,7 @@ export function EditJobOpeningDialog({
                                       setContactPopoverStates(prev => prev.map((s, i) => i === index ? false : s));
                                       setContactSearchInputs(prev => prev.map((s, i) => i === index ? (newContact ? newContact.name : '') : s));
                                     }} className="text-sm cursor-pointer">
-                                    <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
                                     Create: "{contactSearchInputs[index]}"
                                     {form.getValues("companyName") ? ` (for ${form.getValues("companyName")})` : ''}
                                   </CommandItem>)}
@@ -376,7 +375,7 @@ export function EditJobOpeningDialog({
                                       setContactPopoverStates(prev => prev.map((s, i) => i === index ? false : s));
                                       setContactSearchInputs(prev => prev.map((s, i) => i === index ? (newContact ? newContact.name : '') : s));
                                     }} className="text-sm cursor-pointer">
-                                   <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                   <ChevronsUpDown className="mr-2 h-4 w-4" />
                                     Create: "{contactSearchInputs[index]}"
                                     {form.getValues("companyName") ? ` (for ${form.getValues("companyName")})` : ''}
                                   </CommandItem>)}
@@ -417,7 +416,7 @@ export function EditJobOpeningDialog({
                   />
                 </React.Fragment>
               ))}
-            </div> 
+            </div>
 
             <button
               type="button"
@@ -465,7 +464,7 @@ export function EditJobOpeningDialog({
                   <FormItem> <FormLabel>Job Description URL (Optional)</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /></FormItem>)}
               />
             </div>
-            
+
             <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem> <FormLabel>Notes (Optional)</FormLabel> <FormControl><Textarea placeholder="Any additional notes..." {...field} rows={3}/></FormControl> <FormMessage /></FormItem>)}
             />
@@ -497,13 +496,3 @@ export function EditJobOpeningDialog({
     </Dialog>
   );
 }
-    
-
-    
-
-    
-
-
-
-
-    

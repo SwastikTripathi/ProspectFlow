@@ -6,7 +6,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react'; 
+import { CalendarIcon, Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -44,10 +44,10 @@ import { Textarea } from '@/components/ui/textarea';
 import type { FollowUp, Company, Contact, DefaultFollowUpTemplates, FollowUpTemplateContent, ContactFormEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-export const DEFAULT_FOLLOW_UP_CADENCE_DAYS = [7, 14, 21]; 
+export const DEFAULT_FOLLOW_UP_CADENCE_DAYS = [7, 14, 21];
 
 const contactEntrySchema = z.object({
-  contact_id: z.string().optional(), 
+  contact_id: z.string().optional(),
   contactName: z.string().min(1, "Contact name is required"),
   contactEmail: z.string().email("Invalid email address").min(1, "Email is required"),
 });
@@ -70,45 +70,45 @@ export type AddJobOpeningFormValues = z.infer<typeof addJobOpeningSchema>;
 interface AddJobOpeningDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddJobOpening: (values: AddJobOpeningFormValues) => Promise<void>; 
+  onAddJobOpening: (values: AddJobOpeningFormValues) => Promise<void>;
   companies: Company[];
-  contacts: Contact[]; 
-  onAddNewCompany: (companyName: string) => Promise<Company | null>; 
-  onAddNewContact: (contactName: string, contactEmail?: string, companyId?: string, companyName?: string) => Promise<Contact | null>; 
+  contacts: Contact[];
+  onAddNewCompany: (companyName: string) => Promise<Company | null>;
+  onAddNewContact: (contactName: string, contactEmail?: string, companyId?: string, companyName?: string) => Promise<Contact | null>;
   defaultEmailTemplates?: DefaultFollowUpTemplates;
 }
 
-const formatEmailContentWithSharedSignature = (template?: Omit<FollowUpTemplateContent, 'signature'>, sharedSignature?: string): string => {
+const formatEmailContentWithSharedSignature = (template?: FollowUpTemplateContent, sharedSignature?: string): string => {
   if (!template) return sharedSignature || '';
   let content = "";
   if (template.subject?.trim()) {
     content += `Subject: ${template.subject.trim()}`;
   }
   if (template.openingLine?.trim()) {
-    if (content) content += "\n\n"; // Add space if subject exists
+    if (content) content += "\n\n";
     content += template.openingLine.trim();
   }
   if (sharedSignature?.trim()) {
-    if (content) content += "\n\n"; // Add space if subject/openingLine exists
+    if (content) content += "\n\n";
     content += sharedSignature.trim();
   }
   return content.trim();
 };
 
 
-export function AddJobOpeningDialog({ 
-  isOpen, 
-  onOpenChange, 
-  onAddJobOpening, 
-  companies, 
-  contacts: allExistingContacts, 
+export function AddJobOpeningDialog({
+  isOpen,
+  onOpenChange,
+  onAddJobOpening,
+  companies,
+  contacts: allExistingContacts,
   onAddNewCompany,
   onAddNewContact,
   defaultEmailTemplates,
 }: AddJobOpeningDialogProps) {
   const [companyPopoverOpen, setCompanyPopoverOpen] = useState(false);
   const [companySearchInput, setCompanySearchInput] = useState('');
-  
+
   const [contactPopoverStates, setContactPopoverStates] = useState<boolean[]>([]);
   const [contactSearchInputs, setContactSearchInputs] = useState<string[]>([]);
 
@@ -119,8 +119,8 @@ export function AddJobOpeningDialog({
       companyName: '',
       company_id: '',
       roleTitle: '',
-      contacts: [{ contactName: '', contactEmail: '', contact_id: '' }], 
-      initialEmailDate: new Date(), 
+      contacts: [{ contactName: '', contactEmail: '', contact_id: '' }],
+      initialEmailDate: new Date(),
       jobDescriptionUrl: '',
       notes: '',
       followUp1EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
@@ -129,7 +129,7 @@ export function AddJobOpeningDialog({
     },
   });
 
-  const { fields: contactFields, append: appendContact, remove: removeContactField } = useFieldArray({ 
+  const { fields: contactFields, append: appendContact, remove: removeContactField } = useFieldArray({
     control: form.control,
     name: "contacts"
   });
@@ -149,11 +149,11 @@ export function AddJobOpeningDialog({
         followUp3EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
       });
       setCompanySearchInput('');
-      setContactPopoverStates([false]); 
-      setContactSearchInputs(['']);    
+      setContactPopoverStates([false]);
+      setContactSearchInputs(['']);
     }
   }, [isOpen, defaultEmailTemplates, form]);
-  
+
   useEffect(() => {
     if (isOpen) {
         setContactPopoverStates(prev => {
@@ -174,24 +174,24 @@ export function AddJobOpeningDialog({
 
 
   const onSubmit = async (values: AddJobOpeningFormValues) => {
-    await onAddJobOpening(values); 
-    if(isOpen) { 
+    await onAddJobOpening(values);
+    if(isOpen) {
       // Form reset is handled by useEffect on isOpen
     }
   };
 
   const handleDialogCancel = () => {
-    onOpenChange(false); 
+    onOpenChange(false);
   };
-  
+
   const currentCompanyIdForContactFilter = form.watch('company_id');
   const currentCompanyNameForContactFilter = form.watch('companyName');
 
 
-  const filteredCompanies = companies.filter(company => 
+  const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(companySearchInput.toLowerCase())
   );
-  
+
   const getFilteredContactsForPopover = (search: string) => {
     return allExistingContacts.filter(contact => {
       const nameMatch = contact.name.toLowerCase().includes(search.toLowerCase());
@@ -201,7 +201,7 @@ export function AddJobOpeningDialog({
       if (currentCompanyNameForContactFilter && !currentCompanyIdForContactFilter) {
         return nameMatch && contact.company_name_cache?.toLowerCase() === currentCompanyNameForContactFilter.toLowerCase();
       }
-      return nameMatch; 
+      return nameMatch;
     });
   }
 
@@ -219,7 +219,7 @@ export function AddJobOpeningDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="py-2 max-h-[70vh] overflow-y-auto px-2 space-y-4">
-            
+
             <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 items-start">
               <FormField
                 control={form.control}
@@ -243,13 +243,13 @@ export function AddJobOpeningDialog({
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
-                          <CommandInput 
+                          <CommandInput
                             placeholder="Search or create company..."
                             value={companySearchInput}
                             onValueChange={(currentValue) => {
                                setCompanySearchInput(currentValue);
-                               field.onChange(currentValue); 
-                               form.setValue("company_id", ""); 
+                               field.onChange(currentValue);
+                               form.setValue("company_id", "");
                             }}
                           />
                           <CommandList>
@@ -262,11 +262,11 @@ export function AddJobOpeningDialog({
                                     form.setValue("company_id", newCompany.id, { shouldValidate: true });
                                   }
                                   setCompanyPopoverOpen(false);
-                                  setCompanySearchInput(newCompany ? newCompany.name : ''); 
+                                  setCompanySearchInput(newCompany ? newCompany.name : '');
                                 }}
                                 className="text-sm cursor-pointer"
                               >
-                                <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                <ChevronsUpDown className="mr-2 h-4 w-4" />
                                 Create new company: "{companySearchInput}"
                               </CommandItem>
                             )}
@@ -300,7 +300,7 @@ export function AddJobOpeningDialog({
                                 }}
                                 className="text-sm cursor-pointer"
                               >
-                                <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                <ChevronsUpDown className="mr-2 h-4 w-4" />
                                 Create new company: "{companySearchInput}"
                               </CommandItem>
                              )}
@@ -323,7 +323,7 @@ export function AddJobOpeningDialog({
                   </FormItem>
                 )}
               />
-              
+
               {contactFields.map((item, index) => (
                  <React.Fragment key={item.id}>
                     <FormField
@@ -332,8 +332,8 @@ export function AddJobOpeningDialog({
                         render={({ field }) => (
                         <FormItem>
                              <FormLabel>Contact Person {index + 1}</FormLabel>
-                            <Popover 
-                            open={contactPopoverStates[index]} 
+                            <Popover
+                            open={contactPopoverStates[index]}
                             onOpenChange={(open) => setContactPopoverStates(prev => prev.map((s, i) => i === index ? open : s))}
                             >
                             <PopoverTrigger asChild>
@@ -346,14 +346,14 @@ export function AddJobOpeningDialog({
                             </PopoverTrigger>
                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                                 <Command>
-                                <CommandInput 
+                                <CommandInput
                                     placeholder="Search or create contact..."
                                     value={contactSearchInputs[index] || ''}
                                     onValueChange={(searchValue) => {
                                     setContactSearchInputs(prev => prev.map((s, i) => i === index ? searchValue : s));
-                                    field.onChange(searchValue); 
-                                    form.setValue(`contacts.${index}.contact_id`, undefined); 
-                                    form.setValue(`contacts.${index}.contactEmail`, ''); 
+                                    field.onChange(searchValue);
+                                    form.setValue(`contacts.${index}.contact_id`, undefined);
+                                    form.setValue(`contacts.${index}.contactEmail`, '');
                                     }}
                                 />
                                 <CommandList>
@@ -380,7 +380,7 @@ export function AddJobOpeningDialog({
                                         }}
                                         className="text-sm cursor-pointer"
                                     >
-                                        <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                        <ChevronsUpDown className="mr-2 h-4 w-4" />
                                         Create: "{contactSearchInputs[index]}"
                                         {form.getValues("companyName") ? ` (for ${form.getValues("companyName")})` : ''}
                                     </CommandItem>
@@ -429,7 +429,7 @@ export function AddJobOpeningDialog({
                                         }}
                                         className="text-sm cursor-pointer"
                                     >
-                                    <ChevronsUpDown className="mr-2 h-4 w-4" /> 
+                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
                                         Create: "{contactSearchInputs[index]}"
                                         {form.getValues("companyName") ? ` (for ${form.getValues("companyName")})` : ''}
                                     </CommandItem>
@@ -476,8 +476,8 @@ export function AddJobOpeningDialog({
                     />
                 </React.Fragment>
               ))}
-            </div> 
-            
+            </div>
+
             <button
               type="button"
               onClick={() => appendContact({ contactName: '', contactEmail: '', contact_id: '' })}
@@ -485,7 +485,7 @@ export function AddJobOpeningDialog({
             >
               Add more
             </button>
-            
+
             <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 items-start pt-2">
               <FormField
                 control={form.control}
@@ -534,7 +534,7 @@ export function AddJobOpeningDialog({
                 </FormItem>
               )}
             />
-            
+
             <div className="space-y-4">
               <FormField control={form.control} name="followUp1EmailContent" render={({ field }) => (
                   <FormItem>
@@ -572,13 +572,3 @@ export function AddJobOpeningDialog({
     </Dialog>
   );
 }
-    
-
-    
-
-    
-
-
-
-
-    

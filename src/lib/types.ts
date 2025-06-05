@@ -31,14 +31,14 @@ export interface FollowUp {
   job_opening_id: string;
   user_id?: string;
   created_at?: string;
-  follow_up_date: Date; 
-  original_due_date?: Date | null; 
+  follow_up_date: Date;
+  original_due_date?: Date | null;
   email_content?: string | null;
   status: 'Pending' | 'Sent' | 'Skipped';
 }
 
 export interface JobOpeningAssociatedContact {
-  contact_id: string; 
+  contact_id: string;
   name: string;
   email: string;
 }
@@ -50,23 +50,23 @@ export interface JobOpening {
   created_at?: string;
   company_id?: string | null;
   company_name_cache: string;
-  associated_contacts?: JobOpeningAssociatedContact[]; 
+  associated_contacts?: JobOpeningAssociatedContact[];
   role_title: string;
   initial_email_date: Date;
   followUps?: FollowUp[];
-  status: 
-    | 'Watching' 
-    | 'Applied' 
-    | 'Emailed' 
+  status:
+    | 'Watching'
+    | 'Applied'
+    | 'Emailed'
     | '1st Follow Up'
     | '2nd Follow Up'
     | '3rd Follow Up'
-    | 'No Response' 
-    | 'Replied - Positive' 
-    | 'Replied - Negative' 
-    | 'Interviewing' 
-    | 'Offer' 
-    | 'Rejected' 
+    | 'No Response'
+    | 'Replied - Positive'
+    | 'Replied - Negative'
+    | 'Interviewing'
+    | 'Offer'
+    | 'Rejected'
     | 'Closed';
   tags?: string[] | null;
   job_description_url?: string | null;
@@ -87,7 +87,7 @@ export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending_p
 export interface UserSubscription {
   id: string;
   user_id: string;
-  tier: SubscriptionTier; // Will store 'free' or 'premium'
+  tier: SubscriptionTier;
   plan_start_date: Date | null;
   plan_expiry_date: Date | null;
   status: SubscriptionStatus;
@@ -108,22 +108,18 @@ export interface AvailablePlan {
   id: string; // Unique ID for the purchase option, e.g., 'free', 'premium-1m', 'premium-6m'
   databaseTier: SubscriptionTier; // The actual tier this plan maps to in the DB ('free' or 'premium')
   name: string; // Display name for the card, e.g., "Premium - 1 Month"
-  priceMonthly: number; 
+  priceMonthly: number;
   durationMonths: number;
   discountPercentage?: number;
   description: string;
   features: PlanFeature[];
-  ctaButtonContent?: React.ReactNode;
-  isCurrent?: boolean;
   isPopular?: boolean;
-  finalButtonIsDisabled?: boolean;
-  finalButtonVariant?: any; // Should match ButtonProps['variant']
 }
 
 export interface FollowUpTemplateContent {
   subject: string;
   openingLine: string;
-  // signature removed from here
+  // signature field removed
 }
 
 export interface DefaultFollowUpTemplates {
@@ -136,15 +132,14 @@ export interface DefaultFollowUpTemplates {
 export interface UserSettings {
   user_id: string;
   follow_up_cadence_days: [number, number, number] | Json;
-  default_email_templates: DefaultFollowUpTemplates | Json; // Will now use the updated DefaultFollowUpTemplates
+  default_email_templates: DefaultFollowUpTemplates | Json;
   usage_preference: UsagePreference;
   created_at?: string;
   updated_at?: string;
 }
-    
+
 export interface ContactFormEntry {
   contact_id?: string;
   contactName: string;
   contactEmail: string;
 }
-    
