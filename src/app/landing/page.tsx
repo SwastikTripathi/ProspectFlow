@@ -173,8 +173,13 @@ export default function LandingPage() {
                 <Button size="lg" className="text-lg px-8 py-6 shadow-xl w-full sm:w-auto rounded-full" asChild>
                 <Link href="/auth?action=signup">Get Started for Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto rounded-full" asChild>
-                <Link href="#features">Explore Features</Link>
+                <Button 
+                  size="lg" 
+                  variant="link" 
+                  className="text-lg px-8 py-6 w-full sm:w-auto rounded-full text-muted-foreground underline underline-offset-4 hover:text-primary/90 hover:decoration-primary/90" 
+                  asChild
+                >
+                  <Link href="#features">Explore Features</Link>
                 </Button>
             </div>
             <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
