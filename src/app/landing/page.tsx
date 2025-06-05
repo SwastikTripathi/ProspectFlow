@@ -6,9 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building, Workflow, Focus, ShieldCheck, HeartHandshake, Star } from 'lucide-react';
+import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building, Workflow, Focus, ShieldCheck, HeartHandshake, Star, HelpCircle } from 'lucide-react';
 import { Logo } from '@/components/icons/Logo';
 import { Badge } from '@/components/ui/badge'; 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const features = [
   {
@@ -37,7 +38,6 @@ const features = [
   },
 ];
 
-// Updated testimonials array for the new section structure
 const newTestimonialsData = [
   {
     quote: "ProspectFlow revolutionized how I manage my job search. I'm more organized and follow up more effectively!",
@@ -59,6 +59,37 @@ const newTestimonialsData = [
     role: 'Marketing Specialist',
     avatar: 'https://placehold.co/100x100.png',
     dataAiHint: 'person professional'
+  }
+];
+
+const faqData = [
+  {
+    question: "What is ProspectFlow?",
+    answer: "ProspectFlow is an outreach management tool designed to help job seekers, sales professionals, and networkers organize and track their prospecting efforts, manage contacts, and automate follow-ups."
+  },
+  {
+    question: "Who is ProspectFlow for?",
+    answer: "It's for anyone actively reaching out to new connections: job seekers managing applications, sales teams tracking leads, or individuals building their professional network."
+  },
+  {
+    question: "What makes ProspectFlow different?",
+    answer: "ProspectFlow focuses on simplicity and efficiency for individual outreach. It combines key features like job opening tracking, contact management, and follow-up scheduling in an intuitive interface, without the complexity of larger CRMs."
+  },
+  {
+    question: "Can I use ProspectFlow for free?",
+    answer: "Yes! ProspectFlow offers a Free Tier with core features to get you started. We also have premium plans for users who need more capacity and advanced features."
+  },
+  {
+    question: "How does ProspectFlow help with follow-ups?",
+    answer: "ProspectFlow allows you to set automated follow-up schedules based on your initial contact date. You can also draft and save email templates to ensure timely and consistent communication."
+  },
+  {
+    question: "Is my data secure with ProspectFlow?",
+    answer: "Yes, we take data security seriously. Your information is stored securely, and we use industry-standard practices to protect your privacy."
+  },
+  {
+    question: "How do I get started with ProspectFlow?",
+    answer: "Simply sign up for our Free Tier! No credit card is required to start. You can begin adding your job openings, contacts, and companies right away."
   }
 ];
 
@@ -373,7 +404,6 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* Testimonials Section - Replaced with new design */}
         <section className="py-16 md:py-24 bg-secondary/50">
           <div className="container px-4 md:px-6 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-12 font-headline text-foreground">
@@ -399,7 +429,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Why Choose ProspectFlow (4 Reasons) Section */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">
@@ -444,7 +473,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-
         {/* CTA Section */}
         <section className="py-20 md:py-28 text-center bg-background">
           <div className="container px-4 md:px-6">
@@ -459,6 +487,30 @@ export default function LandingPage() {
             </Button>
           </div>
         </section>
+
+        {/* FAQ Section */}
+        <section className="py-16 md:py-24 bg-secondary/30">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">
+              Frequently Asked Questions
+            </h2>
+            <div className="max-w-3xl mx-auto">
+              <Accordion type="single" collapsible className="w-full">
+                {faqData.map((faq, index) => (
+                  <AccordionItem value={`item-${index + 1}`} key={index} className="bg-card shadow-sm rounded-md mb-3 last:mb-0">
+                    <AccordionTrigger className="px-6 py-4 text-left font-semibold text-foreground hover:no-underline">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-4 text-muted-foreground">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       <footer className="py-8 border-t bg-background">
@@ -469,4 +521,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
