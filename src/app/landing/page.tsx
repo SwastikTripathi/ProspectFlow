@@ -6,9 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building } from 'lucide-react'; // Added ArrowRight
+import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building, Workflow, Focus, ShieldCheck, HeartHandshake } from 'lucide-react';
 import { Logo } from '@/components/icons/Logo';
-import { Badge } from '@/components/ui/badge'; // Added Badge
+import { Badge } from '@/components/ui/badge'; 
 
 const features = [
   {
@@ -132,6 +132,26 @@ function HeroVisual() {
 
 
 export default function LandingPage() {
+  const fourReasons = [
+    {
+      icon: Zap,
+      title: "Built for efficient outreach",
+      description: "ProspectFlow is designed specifically for the workflows of proactive job seekers and networkers, helping you manage your pipeline without the clutter of complex CRMs."
+    },
+    {
+      icon: Users,
+      title: "Designed for individuals & career growth"
+    },
+    {
+      icon: Focus,
+      title: "Focus on genuine connections"
+    },
+    {
+      icon: ShieldCheck,
+      title: "Clear features, fair pricing"
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-background to-secondary/10">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -367,6 +387,53 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Why Choose ProspectFlow (4 Reasons) Section */}
+        <section className="py-16 md:py-24 bg-background">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">
+              Stop juggling spreadsheets &amp; missed chances. <br className="hidden sm:inline" />
+              Choose <span className="text-primary">ProspectFlow</span> for these reasons:
+            </h2>
+            <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="relative aspect-[4/3] bg-secondary/20 rounded-xl shadow-xl p-6 flex items-center justify-center">
+                {/* Placeholder for a more complex visual inspired by the example */}
+                <Image
+                  src="https://placehold.co/1024x768.png"
+                  alt="ProspectFlow Interface Mockup"
+                  width={1024}
+                  height={768}
+                  className="rounded-lg object-contain"
+                  data-ai-hint="app interface task management"
+                />
+              </div>
+              <div className="space-y-8">
+                {fourReasons.map((reason, index) => {
+                  const IconComponent = reason.icon;
+                  return (
+                    <div key={reason.title} className="relative">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0">
+                          <IconComponent className="h-7 w-7 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold font-headline text-foreground mb-1">{reason.title}</h3>
+                          {reason.description && (
+                            <p className="text-muted-foreground leading-relaxed">{reason.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      {index < fourReasons.length - 1 && (
+                        <div className="ml-11 mt-4 border-b border-border"></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+
         {/* CTA Section */}
         <section className="py-20 md:py-28 text-center bg-background">
           <div className="container px-4 md:px-6">
@@ -391,4 +458,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
