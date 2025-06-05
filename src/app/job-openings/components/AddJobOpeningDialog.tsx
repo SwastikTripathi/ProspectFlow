@@ -536,21 +536,21 @@ export function AddJobOpeningDialog({
             <div className="space-y-4">
               <FormField control={form.control} name="followUp1EmailContent" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Follow-up Email 1 (after {DEFAULT_FOLLOW_UP_CADENCE_DAYS[0]} days)</FormLabel>
+                    <FormLabel>1st Follow-Up Email</FormLabel>
                     <FormControl><Textarea placeholder="Draft your first follow-up email here..." {...field} rows={4} /></FormControl>
                     <FormMessage />
                   </FormItem>
               )}/>
                <FormField control={form.control} name="followUp2EmailContent" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Follow-up Email 2 (after {DEFAULT_FOLLOW_UP_CADENCE_DAYS[1]} days)</FormLabel>
+                    <FormLabel>2nd Follow-Up Email</FormLabel>
                     <FormControl><Textarea placeholder="Draft your second follow-up email here..." {...field} rows={4} /></FormControl>
                     <FormMessage />
                   </FormItem>
               )}/>
                <FormField control={form.control} name="followUp3EmailContent" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Follow-up Email 3 (after {DEFAULT_FOLLOW_UP_CADENCE_DAYS[2]} days)</FormLabel>
+                    <FormLabel>3rd Follow-Up Email</FormLabel>
                     <FormControl><Textarea placeholder="Draft your third follow-up email here..." {...field} rows={4} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -580,3 +580,4 @@ export function AddJobOpeningDialog({
 
 
     
+
