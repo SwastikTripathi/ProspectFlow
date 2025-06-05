@@ -139,11 +139,20 @@ export default function LandingPage() {
           <Link href="/landing" className="mr-6 flex items-center space-x-2">
             <Logo />
           </Link>
-          <nav className="flex items-center space-x-2 sm:space-x-4">
-            <Button variant="ghost" asChild>
+          <nav className="flex items-center space-x-1 sm:space-x-2">
+            <Button variant="ghost" asChild className="rounded-full">
+              <Link href="#">Pricing</Link>
+            </Button>
+            <Button variant="ghost" asChild className="rounded-full">
+              <Link href="#">Blog</Link>
+            </Button>
+            <Button variant="ghost" asChild className="rounded-full">
+              <Link href="#">About</Link>
+            </Button>
+            <Button variant="ghost" asChild className="rounded-full">
               <Link href="/auth">Sign In</Link>
             </Button>
-            <Button asChild className="shadow-md">
+            <Button asChild className="shadow-md rounded-full">
               <Link href="/auth?action=signup">Try for Free</Link>
             </Button>
           </nav>
@@ -161,10 +170,10 @@ export default function LandingPage() {
               ProspectFlow is the easy-to-use tool built to streamline your outreach: manage job applications, sales leads, and professional networking like a pro.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6">
-                <Button size="lg" className="text-lg px-8 py-6 shadow-xl w-full sm:w-auto" asChild>
+                <Button size="lg" className="text-lg px-8 py-6 shadow-xl w-full sm:w-auto rounded-full" asChild>
                 <Link href="/auth?action=signup">Get Started for Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto" asChild>
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto rounded-full" asChild>
                 <Link href="#features">Explore Features</Link>
                 </Button>
             </div>
@@ -232,7 +241,7 @@ export default function LandingPage() {
             <p className="max-w-xl mx-auto text-lg text-muted-foreground mb-8">
               Join ProspectFlow today and take control of your professional opportunities.
             </p>
-            <Button size="lg" className="text-lg px-8 py-6 shadow-xl" asChild>
+            <Button size="lg" className="text-lg px-8 py-6 shadow-xl rounded-full" asChild>
               <Link href="/auth?action=signup">Sign Up - It's Free to Start</Link>
             </Button>
           </div>
