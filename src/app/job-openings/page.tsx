@@ -28,7 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { supabase } from '@/lib/supabaseClient';
 import type { User } from '@supabase/supabase-js';
-import type { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types';
+import type { TablesInsert, TablesUpdate } from '@/lib/database.types';
 import { isToday, isValid, startOfDay, add, isBefore, format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 
@@ -80,7 +80,7 @@ async function determineNewJobOpeningStatus(
   } else if (sentFollowUpsCount >= 3) {
     return '3rd Follow Up';
   }
-  return currentJobOpeningStatus; // Should not happen if logic is correct above
+  return currentJobOpeningStatus; 
 }
 
 
@@ -137,14 +137,14 @@ export default function JobOpeningsPage() {
         jobOpeningsResponse,
         companiesResponse,
         contactsResponse,
-        allFollowUpsResponse,
+        allFollowUpsResponse, // Fetching all follow-ups
         userSettingsResponse,
         jobOpeningContactsResponse,
       ] = await Promise.all([
         supabase.from('job_openings').select('*').eq('user_id', currentUser.id),
         supabase.from('companies').select('*').eq('user_id', currentUser.id).order('name', { ascending: true }),
         supabase.from('contacts').select('*').eq('user_id', currentUser.id).order('name', { ascending: true }),
-        supabase.from('follow_ups').select('id, job_opening_id, follow_up_date, original_due_date, email_content, status, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: true }),
+        supabase.from('follow_ups').select('id, job_opening_id, follow_up_date, original_due_date, email_subject, email_body, status, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: true }),
         supabase.from('user_settings').select('*').eq('user_id', currentUser.id).single(),
         supabase.from('job_opening_contacts').select('*').eq('user_id', currentUser.id),
       ]);
@@ -171,6 +171,8 @@ export default function JobOpeningsPage() {
             id: fuDb.id,
             follow_up_date: startOfDay(new Date(fuDb.follow_up_date)),
             original_due_date: fuDb.original_due_date ? startOfDay(new Date(fuDb.original_due_date)) : null,
+            email_subject: fuDb.email_subject, // Keep
+            email_body: fuDb.email_body,       // Keep
           } as FollowUp))
           .sort((a,b) => (a.original_due_date || a.created_at!).getTime() - (b.original_due_date || b.created_at!).getTime());
 
@@ -196,7 +198,7 @@ export default function JobOpeningsPage() {
 
       setJobOpenings(openingsWithDetails as JobOpening[]);
       setCompanies(companiesResponse.data || []);
-      setContacts(allDbContacts); 
+      setContacts(allDbContacts);
 
     } catch (error: any) {
       toast({ title: 'Error Fetching Data', description: error.message, variant: 'destructive' });
@@ -287,7 +289,7 @@ export default function JobOpeningsPage() {
         user_id: currentUser.id,
         company_id: companyId || null,
         company_name_cache: companyNameCache || null,
-        tags: [], 
+        tags: [],
       };
       const { data, error } = await supabase
         .from('contacts')
@@ -361,14 +363,14 @@ export default function JobOpeningsPage() {
             const newContact = await handleAddNewContactToListSupabase(
               formContact.contactName,
               formContact.contactEmail,
-              companyIdToLink || undefined, 
-              resolvedCompanyNameCache || undefined 
+              companyIdToLink || undefined,
+              resolvedCompanyNameCache || undefined
             );
             if (newContact?.id) {
               resolvedContactId = newContact.id;
             } else {
               console.warn(`Could not resolve or create contact: ${formContact.contactName}. Skipping link for this contact.`);
-              continue; 
+              continue;
             }
           }
 
@@ -387,31 +389,26 @@ export default function JobOpeningsPage() {
           }
         }
 
-        const followUpEmailContents = [
-          values.followUp1EmailContent,
-          values.followUp2EmailContent,
-          values.followUp3EmailContent,
+        const followUpDetails = [
+          values.followUp1,
+          values.followUp2,
+          values.followUp3,
         ];
 
         const initialDateForCadenceCalc = startOfDay(new Date(values.initialEmailDate));
         const currentCadence = (userSettings?.follow_up_cadence_days as [number, number, number]) || DEFAULT_FOLLOW_UP_CADENCE_DAYS;
 
-
-        const calculatedFollowUps = currentCadence.map((days, index) => ({
-          date: startOfDay(add(initialDateForCadenceCalc, {days})),
-          emailContent: followUpEmailContents[index] || null,
-          status: 'Pending' as FollowUp['status'],
-        }));
-
-        const followUpsToInsert: TablesInsert<'follow_ups'>[] = calculatedFollowUps
-          .map(fu => ({
+        const followUpsToInsert: TablesInsert<'follow_ups'>[] = currentCadence
+          .map((days, index) => ({
             job_opening_id: newJobOpeningData.id,
             user_id: currentUser.id,
-            follow_up_date: fu.date.toISOString(),
-            original_due_date: fu.date.toISOString(), 
-            email_content: fu.emailContent,
-            status: fu.status,
+            follow_up_date: startOfDay(add(initialDateForCadenceCalc, {days})).toISOString(),
+            original_due_date: startOfDay(add(initialDateForCadenceCalc, {days})).toISOString(),
+            email_subject: followUpDetails[index]?.subject || null,
+            email_body: followUpDetails[index]?.body || null,
+            status: 'Pending' as FollowUp['status'],
           }));
+
 
         if (followUpsToInsert.length > 0) {
           const { error: followUpError } = await supabase.from('follow_ups').insert(followUpsToInsert);
@@ -503,7 +500,7 @@ export default function JobOpeningsPage() {
         if (deleteLinksError) {
           console.error(`Error deleting old contact links for job opening ${openingId}:`, deleteLinksError);
           toast({ title: 'Contact Link Error', description: `Could not update contact associations (delete step). Error: ${JSON.stringify(deleteLinksError)}`, variant: 'destructive'});
-          return; // Halt if deleting old links fails
+          return;
         }
 
         for (const formContact of formValues.contacts) {
@@ -545,28 +542,23 @@ export default function JobOpeningsPage() {
 
         if (deleteFollowUpsError) throw deleteFollowUpsError;
 
-        const followUpEmailContents = [
-          formValues.followUp1EmailContent,
-          formValues.followUp2EmailContent,
-          formValues.followUp3EmailContent,
+        const followUpDetails = [
+          formValues.followUp1,
+          formValues.followUp2,
+          formValues.followUp3,
         ];
         const initialDateForCadenceCalc = startOfDay(new Date(formValues.initialEmailDate));
         const currentCadence = (userSettings?.follow_up_cadence_days as [number, number, number]) || DEFAULT_FOLLOW_UP_CADENCE_DAYS;
 
-        const calculatedFollowUps = currentCadence.map((days, index) => ({
-          date: startOfDay(add(initialDateForCadenceCalc, {days})),
-          emailContent: followUpEmailContents[index] || null,
-          status: 'Pending' as FollowUp['status'],
-        }));
-
-        const followUpsToInsert: TablesInsert<'follow_ups'>[] = calculatedFollowUps
-          .map((fu, index) => ({
+        const followUpsToInsert: TablesInsert<'follow_ups'>[] = currentCadence
+          .map((days, index) => ({
               job_opening_id: openingId,
               user_id: currentUser.id,
-              follow_up_date: fu.date.toISOString(),
-              original_due_date: fu.date.toISOString(),
-              email_content: fu.emailContent,
-              status: fu.status,
+              follow_up_date: startOfDay(add(initialDateForCadenceCalc, {days})).toISOString(),
+              original_due_date: startOfDay(add(initialDateForCadenceCalc, {days})).toISOString(),
+              email_subject: followUpDetails[index]?.subject || null,
+              email_body: followUpDetails[index]?.body || null,
+              status: 'Pending' as FollowUp['status'],
             }));
 
         if (followUpsToInsert.length > 0) {
@@ -998,4 +990,3 @@ export default function JobOpeningsPage() {
     </AppLayout>
   );
 }
-

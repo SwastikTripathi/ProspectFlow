@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from '@/components/ui/textarea';
-import type { JobOpening, FollowUp, Company, Contact, JobOpeningAssociatedContact, ContactFormEntry } from '@/lib/types';
+import type { JobOpening, FollowUp, Company, Contact, ContactFormEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -24,6 +24,11 @@ const contactEntrySchema = z.object({
   contact_id: z.string().optional(),
   contactName: z.string().min(1, "Contact name is required"),
   contactEmail: z.string().email("Invalid email address").min(1, "Email is required"),
+});
+
+const followUpContentSchema = z.object({
+  subject: z.string().max(255, "Subject cannot exceed 255 characters.").optional(),
+  body: z.string().max(5000, "Body cannot exceed 5000 characters.").optional(),
 });
 
 const editJobOpeningSchema = z.object({
@@ -34,9 +39,9 @@ const editJobOpeningSchema = z.object({
   initialEmailDate: z.date({ required_error: "Initial email date is required" }),
   jobDescriptionUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   notes: z.string().optional(),
-  followUp1EmailContent: z.string().optional(),
-  followUp2EmailContent: z.string().optional(),
-  followUp3EmailContent: z.string().optional(),
+  followUp1: followUpContentSchema,
+  followUp2: followUpContentSchema,
+  followUp3: followUpContentSchema,
   status: z.enum(['Watching', 'Applied', 'Emailed', '1st Follow Up', '2nd Follow Up', '3rd Follow Up', 'No Response', 'Replied - Positive', 'Replied - Negative', 'Interviewing', 'Offer', 'Rejected', 'Closed']),
 });
 
@@ -107,9 +112,18 @@ export function EditJobOpeningDialog({
             initialEmailDate: typeof op.initial_email_date === 'string' ? new Date(op.initial_email_date) : op.initial_email_date || new Date(),
             jobDescriptionUrl: op.job_description_url || '',
             notes: op.notes || '',
-            followUp1EmailContent: op.followUps?.[0]?.email_content || '',
-            followUp2EmailContent: op.followUps?.[1]?.email_content || '',
-            followUp3EmailContent: op.followUps?.[2]?.email_content || '',
+            followUp1: {
+                subject: op.followUps?.[0]?.email_subject || '',
+                body: op.followUps?.[0]?.email_body || '',
+            },
+            followUp2: {
+                subject: op.followUps?.[1]?.email_subject || '',
+                body: op.followUps?.[1]?.email_body || '',
+            },
+            followUp3: {
+                subject: op.followUps?.[2]?.email_subject || '',
+                body: op.followUps?.[2]?.email_body || '',
+            },
             status: op.status || 'Watching',
         });
         setCompanySearchInput(op.company_name_cache || '');
@@ -121,7 +135,9 @@ export function EditJobOpeningDialog({
             companyName: '', company_id: '', roleTitle: '',
             contacts: [{ contactName: '', contactEmail: '', contact_id: '' }],
             initialEmailDate: new Date(), jobDescriptionUrl: '', notes: '',
-            followUp1EmailContent: '', followUp2EmailContent: '', followUp3EmailContent: '',
+            followUp1: { subject: '', body: '' },
+            followUp2: { subject: '', body: '' },
+            followUp3: { subject: '', body: '' },
             status: 'Watching',
         });
         setCompanySearchInput('');
@@ -134,7 +150,7 @@ export function EditJobOpeningDialog({
     if (isOpen) {
       resetFormWithOpeningData(openingToEdit);
     }
-  }, [openingToEdit, isOpen, form.reset]);
+  }, [openingToEdit, isOpen, form.reset]); // form.reset added to dependencies
 
    useEffect(() => {
     if (isOpen) {
@@ -469,13 +485,34 @@ export function EditJobOpeningDialog({
                 <FormItem> <FormLabel>Notes (Optional)</FormLabel> <FormControl><Textarea placeholder="Any additional notes..." {...field} rows={3}/></FormControl> <FormMessage /></FormItem>)}
             />
 
-            <div className="space-y-4">
-              <FormField control={form.control} name="followUp1EmailContent" render={({ field }) => (
-                  <FormItem><FormLabel>1st Follow-Up Email</FormLabel><FormControl><Textarea placeholder="Draft your first follow-up email here..." {...field} rows={4}/></FormControl><FormMessage /></FormItem>)}/>
-              <FormField control={form.control} name="followUp2EmailContent" render={({ field }) => (
-                  <FormItem><FormLabel>2nd Follow-Up Email</FormLabel><FormControl><Textarea placeholder="Draft your second follow-up email here..." {...field} rows={4}/></FormControl><FormMessage /></FormItem>)}/>
-              <FormField control={form.control} name="followUp3EmailContent" render={({ field }) => (
-                  <FormItem><FormLabel>3rd Follow-Up Email</FormLabel><FormControl><Textarea placeholder="Draft your third follow-up email here..." {...field} rows={4}/></FormControl><FormMessage /></FormItem>)}/>
+            <div className="space-y-6">
+              {[1, 2, 3].map((num) => (
+                <div key={`followUp${num}`} className="space-y-2 p-4 border rounded-md shadow-sm">
+                   <h4 className="text-md font-semibold text-primary">Follow-Up Email {num}</h4>
+                  <FormField
+                    control={form.control}
+                    name={`followUp${num}.subject` as const}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <FormControl><Input placeholder={`Subject for follow-up ${num}`} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`followUp${num}.body` as const}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Body</FormLabel>
+                        <FormControl><Textarea placeholder={`Body for follow-up ${num}...`} {...field} rows={4} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ))}
             </div>
 
             <DialogFooter className="justify-between pt-6">

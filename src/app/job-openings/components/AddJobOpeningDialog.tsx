@@ -41,7 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from '@/components/ui/textarea';
-import type { FollowUp, Company, Contact, DefaultFollowUpTemplates, FollowUpTemplateContent, ContactFormEntry } from '@/lib/types';
+import type { Company, Contact, DefaultFollowUpTemplates, FollowUpTemplateContent, ContactFormEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 export const DEFAULT_FOLLOW_UP_CADENCE_DAYS = [7, 14, 21];
@@ -52,6 +52,11 @@ const contactEntrySchema = z.object({
   contactEmail: z.string().email("Invalid email address").min(1, "Email is required"),
 });
 
+const followUpContentSchema = z.object({
+  subject: z.string().max(255, "Subject cannot exceed 255 characters.").optional(),
+  body: z.string().max(5000, "Body cannot exceed 5000 characters.").optional(),
+});
+
 const addJobOpeningSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
   company_id: z.string().optional(),
@@ -60,9 +65,9 @@ const addJobOpeningSchema = z.object({
   initialEmailDate: z.date({ required_error: "Initial email date is required" }),
   jobDescriptionUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   notes: z.string().optional(),
-  followUp1EmailContent: z.string().optional(),
-  followUp2EmailContent: z.string().optional(),
-  followUp3EmailContent: z.string().optional(),
+  followUp1: followUpContentSchema,
+  followUp2: followUpContentSchema,
+  followUp3: followUpContentSchema,
 });
 
 export type AddJobOpeningFormValues = z.infer<typeof addJobOpeningSchema>;
@@ -78,21 +83,12 @@ interface AddJobOpeningDialogProps {
   defaultEmailTemplates?: DefaultFollowUpTemplates;
 }
 
-const formatEmailContentWithSharedSignature = (template?: FollowUpTemplateContent, sharedSignature?: string): string => {
-  if (!template) return sharedSignature || '';
-  let content = "";
-  if (template.subject?.trim()) {
-    content += `Subject: ${template.subject.trim()}`;
-  }
-  if (template.openingLine?.trim()) {
-    if (content) content += "\n\n";
-    content += template.openingLine.trim();
-  }
-  if (sharedSignature?.trim()) {
-    if (content) content += "\n\n";
-    content += sharedSignature.trim();
-  }
-  return content.trim();
+const getDefaultFollowUpValues = (template?: FollowUpTemplateContent, sharedSignature?: string) => {
+  const bodyContent = (template?.openingLine || '') + (sharedSignature ? `\n\n${sharedSignature}` : '');
+  return {
+    subject: template?.subject || '',
+    body: bodyContent.trim(),
+  };
 };
 
 
@@ -123,9 +119,9 @@ export function AddJobOpeningDialog({
       initialEmailDate: new Date(),
       jobDescriptionUrl: '',
       notes: '',
-      followUp1EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
-      followUp2EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp2, defaultEmailTemplates?.sharedSignature),
-      followUp3EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
+      followUp1: getDefaultFollowUpValues(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
+      followUp2: getDefaultFollowUpValues(defaultEmailTemplates?.followUp2, defaultEmailTemplates?.sharedSignature),
+      followUp3: getDefaultFollowUpValues(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
     },
   });
 
@@ -144,9 +140,9 @@ export function AddJobOpeningDialog({
         initialEmailDate: new Date(),
         jobDescriptionUrl: '',
         notes: '',
-        followUp1EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
-        followUp2EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp2, defaultEmailTemplates?.sharedSignature),
-        followUp3EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
+        followUp1: getDefaultFollowUpValues(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
+        followUp2: getDefaultFollowUpValues(defaultEmailTemplates?.followUp2, defaultEmailTemplates?.sharedSignature),
+        followUp3: getDefaultFollowUpValues(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
       });
       setCompanySearchInput('');
       setContactPopoverStates([false]);
@@ -535,29 +531,36 @@ export function AddJobOpeningDialog({
               )}
             />
 
-            <div className="space-y-4">
-              <FormField control={form.control} name="followUp1EmailContent" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>1st Follow-Up Email</FormLabel>
-                    <FormControl><Textarea placeholder="Draft your first follow-up email here..." {...field} rows={4} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-              )}/>
-               <FormField control={form.control} name="followUp2EmailContent" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>2nd Follow-Up Email</FormLabel>
-                    <FormControl><Textarea placeholder="Draft your second follow-up email here..." {...field} rows={4} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-              )}/>
-               <FormField control={form.control} name="followUp3EmailContent" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>3rd Follow-Up Email</FormLabel>
-                    <FormControl><Textarea placeholder="Draft your third follow-up email here..." {...field} rows={4} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-              )}/>
+            <div className="space-y-6">
+              {[1, 2, 3].map((num) => (
+                <div key={`followUp${num}`} className="space-y-2 p-4 border rounded-md shadow-sm">
+                  <h4 className="text-md font-semibold text-primary">Follow-Up Email {num}</h4>
+                  <FormField
+                    control={form.control}
+                    name={`followUp${num}.subject` as const}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <FormControl><Input placeholder={`Subject for follow-up ${num}`} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`followUp${num}.body` as const}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Body</FormLabel>
+                        <FormControl><Textarea placeholder={`Body for follow-up ${num}...`} {...field} rows={4} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ))}
             </div>
+
 
             <DialogFooter className="pt-6">
               <Button type="button" variant="outline" onClick={handleDialogCancel}>Cancel</Button>

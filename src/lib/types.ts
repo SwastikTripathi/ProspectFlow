@@ -33,7 +33,9 @@ export interface FollowUp {
   created_at?: string;
   follow_up_date: Date;
   original_due_date?: Date | null;
-  email_content?: string | null;
+  email_subject?: string | null; // New field
+  email_body?: string | null;    // New field
+  // email_content field is deprecated in favor of subject/body
   status: 'Pending' | 'Sent' | 'Skipped';
 }
 
@@ -79,7 +81,6 @@ export type Tag = {
   color?: string;
 };
 
-// Represents the tier stored in the database.
 export type SubscriptionTier = 'free' | 'premium';
 export type UsagePreference = 'job_hunt' | 'sales' | 'networking' | 'other';
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending_payment' | 'trialing' | 'payment_failed';
@@ -87,7 +88,7 @@ export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending_p
 export interface UserSubscription {
   id: string;
   user_id: string;
-  tier: SubscriptionTier;
+  tier: SubscriptionTier; 
   plan_start_date: Date | null;
   plan_expiry_date: Date | null;
   status: SubscriptionStatus;
@@ -103,11 +104,10 @@ export interface PlanFeature {
   included: boolean;
 }
 
-// Represents a purchasable option in the UI
 export interface AvailablePlan {
-  id: string; // Unique ID for the purchase option, e.g., 'free', 'premium-1m', 'premium-6m'
-  databaseTier: SubscriptionTier; // The actual tier this plan maps to in the DB ('free' or 'premium')
-  name: string; // Display name for the card, e.g., "Premium - 1 Month"
+  id: string; 
+  databaseTier: SubscriptionTier; 
+  name: string; 
   priceMonthly: number;
   durationMonths: number;
   discountPercentage?: number;
@@ -126,7 +126,7 @@ export interface DefaultFollowUpTemplates {
   followUp1: FollowUpTemplateContent;
   followUp2: FollowUpTemplateContent;
   followUp3: FollowUpTemplateContent;
-  sharedSignature: string; // Added shared signature
+  sharedSignature: string; 
 }
 
 export interface UserSettings {
