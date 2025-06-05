@@ -79,7 +79,7 @@ export type Tag = {
   color?: string;
 };
 
-// Simplified to 'free' or 'premium' for database storage and core logic
+// Represents the tier stored in the database.
 export type SubscriptionTier = 'free' | 'premium';
 export type UsagePreference = 'job_hunt' | 'sales' | 'networking' | 'other';
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending_payment' | 'trialing' | 'payment_failed';
@@ -113,28 +113,30 @@ export interface AvailablePlan {
   discountPercentage?: number;
   description: string;
   features: PlanFeature[];
-  cta?: string; 
+  ctaButtonContent?: React.ReactNode;
   isCurrent?: boolean;
   isPopular?: boolean;
-  disabled?: boolean;
+  finalButtonIsDisabled?: boolean;
+  finalButtonVariant?: any; // Should match ButtonProps['variant']
 }
 
 export interface FollowUpTemplateContent {
   subject: string;
   openingLine: string;
-  signature: string;
+  // signature removed from here
 }
 
 export interface DefaultFollowUpTemplates {
   followUp1: FollowUpTemplateContent;
   followUp2: FollowUpTemplateContent;
   followUp3: FollowUpTemplateContent;
+  sharedSignature: string; // Added shared signature
 }
 
 export interface UserSettings {
   user_id: string;
   follow_up_cadence_days: [number, number, number] | Json;
-  default_email_templates: DefaultFollowUpTemplates | Json;
+  default_email_templates: DefaultFollowUpTemplates | Json; // Will now use the updated DefaultFollowUpTemplates
   usage_preference: UsagePreference;
   created_at?: string;
   updated_at?: string;

@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { JobOpening, FollowUp, Company, Contact, JobOpeningAssociatedContact, ContactFormEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DEFAULT_FOLLOW_UP_CADENCE_DAYS } from './AddJobOpeningDialog'; 
+// Removed DEFAULT_FOLLOW_UP_CADENCE_DAYS import, it's defined in user settings or a global config now.
 
 const contactEntrySchema = z.object({
   contact_id: z.string().optional(), 
@@ -507,4 +507,3 @@ export function EditJobOpeningDialog({
 
 
     
-

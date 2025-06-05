@@ -78,18 +78,20 @@ interface AddJobOpeningDialogProps {
   defaultEmailTemplates?: DefaultFollowUpTemplates;
 }
 
-const formatEmailContentFromTemplate = (template?: FollowUpTemplateContent): string => {
-  if (!template) return '';
+const formatEmailContentWithSharedSignature = (template?: Omit<FollowUpTemplateContent, 'signature'>, sharedSignature?: string): string => {
+  if (!template) return sharedSignature || '';
   let content = "";
   if (template.subject?.trim()) {
     content += `Subject: ${template.subject.trim()}`;
-    if (template.openingLine?.trim() || template.signature?.trim()) content += "\n\n";
   }
   if (template.openingLine?.trim()) {
+    if (content) content += "\n\n"; // Add space if subject exists
     content += template.openingLine.trim();
-    if (template.signature?.trim()) content += "\n\n";
   }
-  if (template.signature?.trim()) content += template.signature.trim();
+  if (sharedSignature?.trim()) {
+    if (content) content += "\n\n"; // Add space if subject/openingLine exists
+    content += sharedSignature.trim();
+  }
   return content.trim();
 };
 
@@ -121,9 +123,9 @@ export function AddJobOpeningDialog({
       initialEmailDate: new Date(), 
       jobDescriptionUrl: '',
       notes: '',
-      followUp1EmailContent: formatEmailContentFromTemplate(defaultEmailTemplates?.followUp1),
-      followUp2EmailContent: formatEmailContentFromTemplate(defaultEmailTemplates?.followUp2),
-      followUp3EmailContent: formatEmailContentFromTemplate(defaultEmailTemplates?.followUp3),
+      followUp1EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
+      followUp2EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp2, defaultEmailTemplates?.sharedSignature),
+      followUp3EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
     },
   });
 
@@ -142,9 +144,9 @@ export function AddJobOpeningDialog({
         initialEmailDate: new Date(),
         jobDescriptionUrl: '',
         notes: '',
-        followUp1EmailContent: formatEmailContentFromTemplate(defaultEmailTemplates?.followUp1),
-        followUp2EmailContent: formatEmailContentFromTemplate(defaultEmailTemplates?.followUp2),
-        followUp3EmailContent: formatEmailContentFromTemplate(defaultEmailTemplates?.followUp3),
+        followUp1EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp1, defaultEmailTemplates?.sharedSignature),
+        followUp2EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp2, defaultEmailTemplates?.sharedSignature),
+        followUp3EmailContent: formatEmailContentWithSharedSignature(defaultEmailTemplates?.followUp3, defaultEmailTemplates?.sharedSignature),
       });
       setCompanySearchInput('');
       setContactPopoverStates([false]); 
@@ -580,4 +582,3 @@ export function AddJobOpeningDialog({
 
 
     
-

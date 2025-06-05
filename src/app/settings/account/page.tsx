@@ -18,7 +18,7 @@ import { supabase } from '@/lib/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import type { UserSettings, UsagePreference, DefaultFollowUpTemplates, FollowUpTemplateContent } from '@/lib/types';
-import { Loader2, UserCircle, Settings as SettingsIcon, SlidersHorizontal, MailQuestion } from 'lucide-react';
+import { Loader2, UserCircle, Settings as SettingsIcon, SlidersHorizontal, MailQuestion, Edit3 } from 'lucide-react';
 import type { Json } from '@/lib/database.types';
 
 const USAGE_PREFERENCES: { value: UsagePreference; label: string }[] = [
@@ -28,11 +28,12 @@ const USAGE_PREFERENCES: { value: UsagePreference; label: string }[] = [
   { value: 'other', label: 'Other / General Prospecting' },
 ];
 
-const defaultFollowUpTemplate: FollowUpTemplateContent = { subject: '', openingLine: '', signature: '' };
+const defaultIndividualFollowUpTemplate: Omit<FollowUpTemplateContent, 'signature'> = { subject: '', openingLine: '' };
 const defaultAllTemplates: DefaultFollowUpTemplates = {
-  followUp1: { ...defaultFollowUpTemplate },
-  followUp2: { ...defaultFollowUpTemplate },
-  followUp3: { ...defaultFollowUpTemplate },
+  followUp1: { ...defaultIndividualFollowUpTemplate },
+  followUp2: { ...defaultIndividualFollowUpTemplate },
+  followUp3: { ...defaultIndividualFollowUpTemplate },
+  sharedSignature: '', // Initialize shared signature
 };
 const defaultCadence: [number, number, number] = [7, 14, 21];
 
@@ -46,18 +47,19 @@ const accountSettingsSchema = z.object({
     followUp1: z.object({
       subject: z.string().max(200, "Subject too long").optional(),
       openingLine: z.string().max(500, "Opening line too long").optional(),
-      signature: z.string().max(300, "Signature too long").optional(),
+      // signature removed
     }),
     followUp2: z.object({
       subject: z.string().max(200).optional(),
       openingLine: z.string().max(500).optional(),
-      signature: z.string().max(300).optional(),
+      // signature removed
     }),
     followUp3: z.object({
       subject: z.string().max(200).optional(),
       openingLine: z.string().max(500).optional(),
-      signature: z.string().max(300).optional(),
+      // signature removed
     }),
+    sharedSignature: z.string().max(500, "Signature too long").optional(), // Added shared signature
   }),
 }).refine(data => data.cadenceFu2 > data.cadenceFu1 && data.cadenceFu3 > data.cadenceFu2, {
   message: "Follow-up days must be sequential (e.g., FU2 > FU1, FU3 > FU2).",
@@ -98,14 +100,31 @@ export default function AccountSettingsPage() {
       const fetchedSettings = settingsData as UserSettings | null;
       setUserSettings(fetchedSettings);
       
+      const currentTemplates = fetchedSettings?.default_email_templates 
+        ? (fetchedSettings.default_email_templates as DefaultFollowUpTemplates) 
+        : defaultAllTemplates;
+
       form.reset({
         displayName: user.user_metadata?.full_name || '',
         usagePreference: fetchedSettings?.usage_preference || 'job_hunt',
         cadenceFu1: (fetchedSettings?.follow_up_cadence_days as [number,number,number])?.[0] ?? defaultCadence[0],
         cadenceFu2: (fetchedSettings?.follow_up_cadence_days as [number,number,number])?.[1] ?? defaultCadence[1],
         cadenceFu3: (fetchedSettings?.follow_up_cadence_days as [number,number,number])?.[2] ?? defaultCadence[2],
-        defaultEmailTemplates: fetchedSettings?.default_email_templates ? 
-          (fetchedSettings.default_email_templates as DefaultFollowUpTemplates) : defaultAllTemplates,
+        defaultEmailTemplates: {
+          followUp1: {
+            subject: currentTemplates.followUp1?.subject || '',
+            openingLine: currentTemplates.followUp1?.openingLine || '',
+          },
+          followUp2: {
+            subject: currentTemplates.followUp2?.subject || '',
+            openingLine: currentTemplates.followUp2?.openingLine || '',
+          },
+          followUp3: {
+            subject: currentTemplates.followUp3?.subject || '',
+            openingLine: currentTemplates.followUp3?.openingLine || '',
+          },
+          sharedSignature: currentTemplates.sharedSignature || '',
+        },
       });
 
     } catch (error: any) {
@@ -163,7 +182,7 @@ export default function AccountSettingsPage() {
         user_id: currentUser.id,
         usage_preference: values.usagePreference,
         follow_up_cadence_days: [values.cadenceFu1, values.cadenceFu2, values.cadenceFu3] as unknown as Json,
-        default_email_templates: values.defaultEmailTemplates as unknown as Json,
+        default_email_templates: values.defaultEmailTemplates as unknown as Json, // This now includes sharedSignature
       };
       const { error: settingsUpsertError } = await supabase
         .from('user_settings')
@@ -301,7 +320,7 @@ export default function AccountSettingsPage() {
                 <CardDescription>Set default content for your follow-up emails. These will pre-fill when creating a new job opening.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Accordion type="multiple" className="w-full">
+                <Accordion type="multiple" className="w-full mb-6">
                   {(['followUp1', 'followUp2', 'followUp3'] as const).map((fuKey, index) => (
                     <AccordionItem value={`item-${index + 1}`} key={fuKey}>
                       <AccordionTrigger className="font-semibold">Default Content for Follow-up {index + 1}</AccordionTrigger>
@@ -328,21 +347,24 @@ export default function AccountSettingsPage() {
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name={`defaultEmailTemplates.${fuKey}.signature`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Signature / Closing</FormLabel>
-                              <FormControl><Textarea placeholder="Your default signature" {...field} value={field.value || ''} rows={2} disabled={isLoading || form.formState.isSubmitting} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* Signature field removed from here */}
                       </AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>
+
+                <FormField
+                  control={form.control}
+                  name="defaultEmailTemplates.sharedSignature"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold flex items-center"><Edit3 className="mr-2 h-4 w-4 text-muted-foreground" /> Shared Email Signature</FormLabel>
+                       <CardDescription className="text-xs mb-2">This signature will be appended to all default follow-up email templates.</CardDescription>
+                      <FormControl><Textarea placeholder="Your default signature (e.g., Best regards, Your Name)" {...field} value={field.value || ''} rows={3} disabled={isLoading || form.formState.isSubmitting}/></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
@@ -358,3 +380,4 @@ export default function AccountSettingsPage() {
     </AppLayout>
   );
 }
+
