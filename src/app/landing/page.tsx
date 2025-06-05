@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building, Workflow, Focus, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { CheckCircle, TrendingUp, Users, Target, Briefcase, Zap, ArrowRight, Eye, MailCheck, Building, Workflow, Focus, ShieldCheck, HeartHandshake, Star } from 'lucide-react';
 import { Logo } from '@/components/icons/Logo';
 import { Badge } from '@/components/ui/badge'; 
 
@@ -37,7 +37,8 @@ const features = [
   },
 ];
 
-const testimonials = [
+// Updated testimonials array for the new section structure
+const newTestimonialsData = [
   {
     quote: "ProspectFlow revolutionized how I manage my job search. I'm more organized and follow up more effectively!",
     name: 'Alex P.',
@@ -52,7 +53,15 @@ const testimonials = [
     avatar: 'https://placehold.co/100x100.png', 
     dataAiHint: 'professional woman'
   },
+  {
+    quote: "This app is a game-changer for anyone serious about their career outreach. Highly recommended!",
+    name: 'Jordan Lee',
+    role: 'Marketing Specialist',
+    avatar: 'https://placehold.co/100x100.png',
+    dataAiHint: 'person professional'
+  }
 ];
+
 
 function HeroVisual() {
   const mockCardsData = [
@@ -135,20 +144,20 @@ export default function LandingPage() {
   const fourReasons = [
     {
       icon: Zap,
-      title: "Built for efficient outreach",
+      title: "Built for Streamlined Outreach",
       description: "ProspectFlow is designed specifically for the workflows of proactive job seekers and networkers, helping you manage your pipeline without the clutter of complex CRMs."
     },
     {
       icon: Users,
-      title: "Designed for individuals & career growth"
+      title: "Designed for Individuals & Career Growth"
     },
     {
       icon: Focus,
-      title: "Focus on genuine connections"
+      title: "Focus on Connections, Not Admin"
     },
     {
       icon: ShieldCheck,
-      title: "Clear features, fair pricing"
+      title: "Clear Features, Fair Pricing"
     }
   ];
 
@@ -254,20 +263,20 @@ export default function LandingPage() {
                 </p>
                 <div className="border-l-4 border-primary pl-6 py-4 bg-card rounded-r-lg shadow">
                   <blockquote className="text-muted-foreground italic mb-4">
-                    "{testimonials[0].quote}"
+                    "{newTestimonialsData[0].quote}"
                   </blockquote>
                   <div className="flex items-center">
                     <Image 
-                      data-ai-hint={testimonials[0].dataAiHint} 
-                      src={testimonials[0].avatar} 
-                      alt={testimonials[0].name} 
+                      data-ai-hint={newTestimonialsData[0].dataAiHint} 
+                      src={newTestimonialsData[0].avatar} 
+                      alt={newTestimonialsData[0].name} 
                       width={40} 
                       height={40} 
                       className="rounded-full mr-3" 
                     />
                     <div>
-                      <p className="font-semibold text-sm text-foreground">{testimonials[0].name}</p>
-                      <p className="text-xs text-muted-foreground">{testimonials[0].role}</p>
+                      <p className="font-semibold text-sm text-foreground">{newTestimonialsData[0].name}</p>
+                      <p className="text-xs text-muted-foreground">{newTestimonialsData[0].role}</p>
                     </div>
                   </div>
                 </div>
@@ -311,20 +320,20 @@ export default function LandingPage() {
                 </p>
                 <div className="border-l-4 border-primary pl-6 py-4 bg-card rounded-r-lg shadow">
                   <blockquote className="text-muted-foreground italic mb-4">
-                    "{testimonials[1].quote}"
+                    "{newTestimonialsData[1].quote}"
                   </blockquote>
                   <div className="flex items-center">
                     <Image 
-                      data-ai-hint={testimonials[1].dataAiHint} 
-                      src={testimonials[1].avatar} 
-                      alt={testimonials[1].name} 
+                      data-ai-hint={newTestimonialsData[1].dataAiHint} 
+                      src={newTestimonialsData[1].avatar} 
+                      alt={newTestimonialsData[1].name} 
                       width={40} 
                       height={40} 
                       className="rounded-full mr-3" 
                     />
                     <div>
-                      <p className="font-semibold text-sm text-foreground">{testimonials[1].name}</p>
-                      <p className="text-xs text-muted-foreground">{testimonials[1].role}</p>
+                      <p className="font-semibold text-sm text-foreground">{newTestimonialsData[1].name}</p>
+                      <p className="text-xs text-muted-foreground">{newTestimonialsData[1].role}</p>
                     </div>
                   </div>
                 </div>
@@ -364,26 +373,29 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* Testimonials Section */}
+        {/* Testimonials Section - Replaced with new design */}
         <section className="py-16 md:py-24 bg-secondary/50">
-          <div className="container px-4 md:px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headline text-foreground">Loved by Professionals</h2>
-            <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2 max-w-4xl mx-auto">
-              {testimonials.map((testimonial, index) => ( 
-                <Card key={testimonial.name + index} className="shadow-lg bg-card">
-                  <CardContent className="pt-6">
-                    <blockquote className="text-lg italic text-foreground mb-4">"{testimonial.quote}"</blockquote>
-                    <div className="flex items-center">
-                      <Image data-ai-hint={testimonial.dataAiHint} src={testimonial.avatar} alt={testimonial.name} width={48} height={48} className="rounded-full mr-4" />
-                      <div>
-                        <p className="font-semibold">{testimonial.name}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                      </div>
+          <div className="container px-4 md:px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-12 font-headline text-foreground">
+              Trusted by <span className="text-primary">Proactive Professionals</span> with <span className="text-accent">Ambitious Goals</span>
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8 text-left max-w-6xl mx-auto">
+              {newTestimonialsData.map((testimonial, index) => ( 
+                <div key={testimonial.name + index} className="bg-card p-6 rounded-lg shadow-lg flex flex-col">
+                  <p className="text-muted-foreground mb-6 flex-grow text-base leading-relaxed">"{testimonial.quote}"</p>
+                  <div className="flex items-center mt-auto">
+                    <Image data-ai-hint={testimonial.dataAiHint} src={testimonial.avatar} alt={testimonial.name} width={40} height={40} className="rounded-full mr-3 border" />
+                    <div>
+                      <p className="font-semibold text-sm text-card-foreground">{testimonial.name}</p>
+                      <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
+            <Button size="lg" className="mt-12 text-base px-8 py-6 shadow-md rounded-full" asChild>
+              <Link href="/auth?action=signup">Discover How ProspectFlow Can Help You <ArrowRight className="ml-2 h-5 w-5" /></Link>
+            </Button>
           </div>
         </section>
 
@@ -396,7 +408,6 @@ export default function LandingPage() {
             </h2>
             <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div className="relative aspect-[4/3] bg-secondary/20 rounded-xl shadow-xl p-6 flex items-center justify-center">
-                {/* Placeholder for a more complex visual inspired by the example */}
                 <Image
                   src="https://placehold.co/1024x768.png"
                   alt="ProspectFlow Interface Mockup"
@@ -458,3 +469,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
