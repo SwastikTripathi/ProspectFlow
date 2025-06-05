@@ -33,7 +33,7 @@ const defaultAllTemplates: DefaultFollowUpTemplates = {
   followUp1: { ...defaultIndividualFollowUpTemplate },
   followUp2: { ...defaultIndividualFollowUpTemplate },
   followUp3: { ...defaultIndividualFollowUpTemplate },
-  sharedSignature: '', // Initialize shared signature
+  sharedSignature: '',
 };
 const defaultCadence: [number, number, number] = [7, 14, 21];
 
@@ -47,19 +47,16 @@ const accountSettingsSchema = z.object({
     followUp1: z.object({
       subject: z.string().max(200, "Subject too long").optional(),
       openingLine: z.string().max(500, "Opening line too long").optional(),
-      // signature removed
     }),
     followUp2: z.object({
       subject: z.string().max(200).optional(),
       openingLine: z.string().max(500).optional(),
-      // signature removed
     }),
     followUp3: z.object({
       subject: z.string().max(200).optional(),
       openingLine: z.string().max(500).optional(),
-      // signature removed
     }),
-    sharedSignature: z.string().max(500, "Signature too long").optional(), // Added shared signature
+    sharedSignature: z.string().max(500, "Signature too long").optional(),
   }),
 }).refine(data => data.cadenceFu2 > data.cadenceFu1 && data.cadenceFu3 > data.cadenceFu2, {
   message: "Follow-up days must be sequential (e.g., FU2 > FU1, FU3 > FU2).",
@@ -178,11 +175,13 @@ export default function AccountSettingsPage() {
         if (userUpdateError) throw userUpdateError;
       }
 
+      // Note: usagePreference is disabled, so its value won't be changed by the user
+      // but we still save it as it was loaded.
       const settingsDataToUpsert = {
         user_id: currentUser.id,
-        usage_preference: values.usagePreference,
+        usage_preference: values.usagePreference, 
         follow_up_cadence_days: [values.cadenceFu1, values.cadenceFu2, values.cadenceFu3] as unknown as Json,
-        default_email_templates: values.defaultEmailTemplates as unknown as Json, // This now includes sharedSignature
+        default_email_templates: values.defaultEmailTemplates as unknown as Json,
       };
       const { error: settingsUpsertError } = await supabase
         .from('user_settings')
@@ -242,8 +241,8 @@ export default function AccountSettingsPage() {
 
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline flex items-center"><SlidersHorizontal className="mr-2 h-5 w-5 text-primary"/> Application Preferences</CardTitle>
-                <CardDescription>How do you primarily use ProspectFlow?</CardDescription>
+                <CardTitle className="font-headline flex items-center"><SlidersHorizontal className="mr-2 h-5 w-5 text-primary"/> Usage Preference</CardTitle>
+                <CardDescription>This feature is coming soon. Your selection here will help tailor your experience in the future.</CardDescription>
               </CardHeader>
               <CardContent>
                 <FormField
@@ -252,7 +251,11 @@ export default function AccountSettingsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Primary Usage</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLoading || form.formState.isSubmitting}>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value} 
+                        disabled={true} // Always disabled
+                      >
                         <FormControl>
                           <SelectTrigger><SelectValue placeholder="Select your primary goal" /></SelectTrigger>
                         </FormControl>
@@ -347,7 +350,6 @@ export default function AccountSettingsPage() {
                             </FormItem>
                           )}
                         />
-                        {/* Signature field removed from here */}
                       </AccordionContent>
                     </AccordionItem>
                   ))}
