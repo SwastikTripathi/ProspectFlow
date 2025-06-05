@@ -313,9 +313,9 @@ export default function LandingPage() {
                 </div>
               </div>
               <div>
-                <div className="relative aspect-[3/2] rounded-xl shadow-2xl overflow-hidden border border-border/20">
+                <div className="relative aspect-[4/3] rounded-xl shadow-2xl overflow-hidden border border-border/20">
                   <Image 
-                    src="https://placehold.co/1200x800.png" 
+                    src="https://placehold.co/600x450.png" 
                     alt="ProspectFlow App Dashboard Mockup" 
                     layout="fill"
                     objectFit="cover"
@@ -473,18 +473,51 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-20 md:py-28 text-center bg-background">
+        {/* New Hero-style CTA Section */}
+        <section className="py-20 md:py-28 text-center bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50">
           <div className="container px-4 md:px-6">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6 font-headline text-foreground">
-              Ready to Streamline Your Outreach?
+            <div className="flex justify-center mb-8">
+              <Logo />
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-10 font-headline">
+              Join the thousands of <span className="text-primary">professionals</span> that trust ProspectFlow to <span className="text-primary">land opportunities</span>.
             </h2>
-            <p className="max-w-xl mx-auto text-lg text-muted-foreground mb-8">
-              Join ProspectFlow today and take control of your professional opportunities.
-            </p>
-            <Button size="lg" className="text-lg px-8 py-6 shadow-xl rounded-full" asChild>
-              <Link href="/auth?action=signup">Sign Up - It's Free to Start</Link>
+            <Button 
+              size="lg" 
+              className="text-lg px-10 py-7 shadow-xl rounded-full bg-slate-50 text-slate-900 hover:bg-slate-200 font-semibold" 
+              asChild
+            >
+              <Link href="/auth?action=signup">Try ProspectFlow for Free</Link>
             </Button>
+            <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 mt-10 text-sm text-slate-300">
+              <span className="flex items-center">
+                <CheckCircle className="inline-block h-4 w-4 mr-1.5 text-green-400"/>Free Tier available
+              </span>
+              <span className="flex items-center">
+                <CheckCircle className="inline-block h-4 w-4 mr-1.5 text-green-400"/>No credit card required
+              </span>
+              <span className="flex items-center">
+                <CheckCircle className="inline-block h-4 w-4 mr-1.5 text-green-400"/>Automated Follow-up Reminders
+              </span>
+            </div>
+            <div className="mt-16 lg:mt-20 max-w-5xl mx-auto">
+              <div className="bg-slate-700/60 rounded-t-xl p-2 sm:p-3 shadow-2xl border-x border-t border-slate-600/50">
+                <div className="flex space-x-1.5">
+                  <span className="block w-3 h-3 rounded-full bg-red-500"></span>
+                  <span className="block w-3 h-3 rounded-full bg-yellow-400"></span>
+                  <span className="block w-3 h-3 rounded-full bg-green-500"></span>
+                </div>
+              </div>
+              <Image 
+                src="https://placehold.co/1200x750.png" 
+                alt="ProspectFlow Application Screenshot" 
+                width={1200} 
+                height={750} 
+                className="block w-full h-auto border-x border-b border-slate-600/50 rounded-b-xl shadow-2xl" 
+                data-ai-hint="app interface dashboard"
+                priority 
+              />
+            </div>
           </div>
         </section>
 
